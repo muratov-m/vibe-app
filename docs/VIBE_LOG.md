@@ -646,3 +646,74 @@ QuerySplittingBehavior not configured - can cause slow queries
   3. В конце удаляются старые пользователи (которых нет в импортируемом списке)
 - Улучшена читаемость кода: разделены этапы обработки
 
+---
+
+## Prompt #23
+
+### User Request
+```
+давай сделаем очередь пользователей для генерации embadings
+
+логика:
+1. при обновлении или создании пользователя добавляем в очередь только новый id профиля
+2. в фоне сервис мониторит эту очередь, если есть запись запускает GenerateAndSaveEmbeddingAsync
+3. нужен API для просмотра состояния очереди: сколько в очереди профилей и команду на очистку очереди
+```
+
+### Actions Taken
+- Создана entity `EmbeddingQueue` для хранения очереди профилей на обработку
+- Создан интерфейс `IEmbeddingQueueService` и реализация `EmbeddingQueueService` для управления очередью
+- Создан фоновый сервис `EmbeddingProcessingService` (BackgroundService) для обработки очереди:
+  - Проверяет очередь каждые 5 секунд
+  - Обрабатывает профили по одному
+  - Использует IServiceScopeFactory для работы с scoped сервисами
+- Обновлен `UserProfileService`:
+  - Убраны прямые вызовы `GenerateAndSaveEmbeddingAsync`
+  - Добавлены вызовы `EnqueueProfileAsync` для добавления в очередь
+- Создан `EmbeddingQueueController` с endpoints:
+  - GET /api/embedding-queue/status - статус очереди (количество профилей)
+  - POST /api/embedding-queue/clear - очистка очереди
+- Создана миграция `AddEmbeddingQueue` для таблицы EmbeddingQueue
+- Обновлен AppDbContext с новым DbSet
+- Все сервисы зарегистрированы в DI контейнере
+
+---
+
+## Prompt #24
+
+### User Request
+```
+в DequeueProfileAsync нужно удалять пользователя только если embedding вычислен
+
++ нужно делать обработку в 5 потоков (добавить в конфиг)
+```
+
+### Actions Taken
+- Изменена логика `DequeueProfileAsync`: теперь только извлекает записи, но не удаляет
+- Добавлен новый метод `RemoveFromQueueAsync` для удаления записи после успешной обработки
+- Обновлен `EmbeddingProcessingService` для параллельной обработки:
+  - Обрабатывает несколько профилей одновременно (по умолчанию 5)
+  - Использует `Task.WhenAny` для параллелизма
+  - Удаляет запись из очереди только после успешной генерации embedding
+- Добавлена конфигурация `EmbeddingProcessing:ConcurrentTasks` в `appsettings.json`
+- Обновлена документация в `EMBEDDING_QUEUE_GUIDE.md`
+
+---
+
+## Prompt #25
+
+### User Request
+```
+с IsProcessing слишком сложно получается, сделай без поля, проще
+```
+
+### Actions Taken
+- Убрано поле `IsProcessing` из entity `EmbeddingQueue` (упрощение)
+- Упрощена логика `DequeueProfileAsync`: возвращает запись без изменения флагов
+- Упрощена логика `EnqueueProfileAsync`: только проверка на дубликат
+- Упрощен `EmbeddingProcessingService`:
+  - Берет из очереди batch записей (limit по количеству параллельных задач)
+  - Обрабатывает их параллельно
+  - Удаляет только успешно обработанные
+- Удалена миграция `AddIsProcessingToEmbeddingQueue` (не нужна)
+

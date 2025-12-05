@@ -14,17 +14,20 @@ public class UserProfileService : IUserProfileService
     private readonly IRepository<UserSkill> _userSkillRepository;
     private readonly IRepository<UserLookingFor> _userLookingForRepository;
     private readonly IUserProfileEmbeddingService _embeddingService;
+    private readonly IEmbeddingQueueService _queueService;
 
     public UserProfileService(
         IRepository<UserProfile> userProfileRepository,
         IRepository<UserSkill> userSkillRepository,
         IRepository<UserLookingFor> userLookingForRepository,
-        IUserProfileEmbeddingService embeddingService)
+        IUserProfileEmbeddingService embeddingService,
+        IEmbeddingQueueService queueService)
     {
         _userProfileRepository = userProfileRepository;
         _userSkillRepository = userSkillRepository;
         _userLookingForRepository = userLookingForRepository;
         _embeddingService = embeddingService;
+        _queueService = queueService;
     }
 
     public async Task<BatchImportResult> ImportUserProfilesAsync(List<UserProfileImportDto> dtos, CancellationToken cancellationToken = default)
@@ -147,8 +150,8 @@ public class UserProfileService : IUserProfileService
 
         await _userProfileRepository.AddAsync(userProfile);
         
-        // Generate embedding synchronously (non-blocking for user, but in same transaction)
-        await _embeddingService.GenerateAndSaveEmbeddingAsync(dto.Id);
+        // Add to embedding queue for async processing
+        await _queueService.EnqueueProfileAsync(dto.Id);
     }
 
     private async Task UpdateExistingProfile(UserProfile existingProfile, UserProfileImportDto dto)
@@ -193,8 +196,8 @@ public class UserProfileService : IUserProfileService
 
         await _userProfileRepository.UpdateAsync(existingProfile);
         
-        // Regenerate embedding synchronously
-        await _embeddingService.GenerateAndSaveEmbeddingAsync(existingProfile.Id);
+        // Add to embedding queue for async processing
+        await _queueService.EnqueueProfileAsync(existingProfile.Id);
     }
 
     public async Task<UserProfile?> GetUserProfileByIdAsync(int id, CancellationToken cancellationToken = default)

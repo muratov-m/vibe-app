@@ -263,6 +263,46 @@
 				"description": "Проверка работоспособности API."
 			},
 			"response": []
+		},
+		{
+			"name": "Embedding Queue Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/embedding-queue/status",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"embedding-queue",
+						"status"
+					]
+				},
+				"description": "Получить статус очереди генерации embeddings: количество профилей в очереди."
+			},
+			"response": []
+		},
+		{
+			"name": "Clear Embedding Queue",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/embedding-queue/clear",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"embedding-queue",
+						"clear"
+					]
+				},
+				"description": "Очистить очередь генерации embeddings (удалить все записи из очереди)."
+			},
+			"response": []
 		}
 	],
 	"variable": [

@@ -9,6 +9,8 @@
 - ✅ ASP.NET Core Identity для авторизации
 - ✅ **UserProfile API** - управление расширенными профилями пользователей
 - ✅ **User Profile Embeddings** - автоматическая генерация векторных представлений профилей (pgvector)
+- ✅ **Embedding Queue** - асинхронная очередь для генерации embeddings через OpenAI
+- ✅ **RAG Search** - семантический поиск профилей пользователей
 - ✅ **OpenAI Gateway** - интеграция с OpenAI Chat Completions API
 - ✅ **Простая архитектура** - все через constructor injection, без Service Locator
 - ✅ **Postman коллекция** для тестирования API
@@ -151,6 +153,14 @@ dotnet ef database update
 - `PUT /api/userprofile/{id}` - Обновить профиль
 - `DELETE /api/userprofile/{id}` - Удалить профиль
 
+### RAG Search API
+- `POST /api/ragsearch/search` - Семантический поиск профилей через RAG
+- `GET /api/ragsearch/search?q={query}` - Быстрый поиск через GET
+
+### Embedding Queue API
+- `GET /api/embedding-queue/status` - Статус очереди генерации embeddings
+- `POST /api/embedding-queue/clear` - Очистить очередь
+
 ### Utility
 - `GET /api/weatherforecast` - Тестовый endpoint с прогнозом погоды
 - `GET /health` - Health check endpoint
@@ -253,12 +263,14 @@ public class MyService
 
 При создании или обновлении профиля пользователя автоматически генерируется векторное представление (embedding):
 
-1. **Синхронная обработка**: Embeddings генерируются в том же scope что и создание профиля
-2. **Простая архитектура**: Все зависимости через constructor injection, без сложных фоновых сервисов
-3. **Автоматическое удаление**: При удалении профиля embedding также удаляется
-4. **pgvector таблица**: Embeddings хранятся в таблице `UserProfileEmbeddings` с типом `vector(1536)`
+1. **Асинхронная очередь**: Профили добавляются в очередь для обработки
+2. **Фоновый сервис**: `EmbeddingProcessingService` обрабатывает очередь каждые 5 секунд
+3. **OpenAI Integration**: Использует `text-embedding-3-small` модель для генерации embeddings
+4. **Автоматическое удаление**: При удалении профиля embedding также удаляется
+5. **pgvector таблица**: Embeddings хранятся в таблице `UserProfileEmbeddings` с типом `vector(1536)`
+6. **Мониторинг**: API endpoints для просмотра статуса очереди и управления
 
-**Текущая реализация**: Генерация embedding является placeholder (возвращает нулевой вектор). В будущем здесь будет интеграция с OpenAI API или другим сервисом для генерации векторных представлений профиля.
+Подробнее: `docs/EMBEDDING_QUEUE_GUIDE.md`
 
 ### Вариант 2: Swagger UI
 

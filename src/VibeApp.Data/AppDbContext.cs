@@ -15,6 +15,7 @@ public class AppDbContext : IdentityDbContext
     public DbSet<UserSkill> UserSkills => Set<UserSkill>();
     public DbSet<UserLookingFor> UserLookingFors => Set<UserLookingFor>();
     public DbSet<UserProfileEmbedding> UserProfileEmbeddings => Set<UserProfileEmbedding>();
+    public DbSet<EmbeddingQueue> EmbeddingQueues => Set<EmbeddingQueue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,6 +76,14 @@ public class AppDbContext : IdentityDbContext
                 .WithOne()
                 .HasForeignKey<UserProfileEmbedding>(e => e.UserProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure EmbeddingQueue
+        modelBuilder.Entity<EmbeddingQueue>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserProfileId);
+            entity.Property(e => e.CreatedAt).IsRequired();
         });
     }
 }

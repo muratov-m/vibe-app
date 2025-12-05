@@ -20,6 +20,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserProfileService, UserProfileService>();
         services.AddScoped<IUserProfileEmbeddingService, UserProfileEmbeddingService>();
         services.AddScoped<IRagSearchService, RagSearchService>();
+        services.AddScoped<IEmbeddingQueueService, EmbeddingQueueService>();
+
+        // Register background services
+        services.AddHostedService<EmbeddingProcessingService>();
 
         return services;
     }
