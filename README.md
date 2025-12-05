@@ -1,11 +1,24 @@
-# Vibe App - ASP.NET Core Web API
+# Vibe App - ASP.NET Core Web Application
 
-Минимальный ASP.NET Core Web API проект для конкурса Vibe Coding с поддержкой PostgreSQL.
+Минимальный ASP.NET Core веб-сайт с авторизацией и профилем пользователя для конкурса Vibe Coding.
+
+## Функционал
+
+- ✅ Регистрация и вход пользователей
+- ✅ Профиль пользователя с возможностью изменения пароля
+- ✅ ASP.NET Core Identity для авторизации
+- ✅ PostgreSQL для хранения данных
+- ✅ Современный UI на Bootstrap 5
+- ✅ Web API с Swagger
+- ✅ Docker поддержка
 
 ## Технологии
 
 - ASP.NET Core 9.0
+- ASP.NET Core Identity
+- Razor Pages
 - PostgreSQL (через Npgsql.EntityFrameworkCore.PostgreSQL)
+- Bootstrap 5
 - Docker
 - Swagger/OpenAPI
 
@@ -31,6 +44,7 @@ docker run --name postgres-vibe -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=vib
 ```bash
 cd src/VibeApp.Api
 dotnet restore
+dotnet ef database update  # Применить миграции Identity
 dotnet run
 ```
 
@@ -39,13 +53,21 @@ dotnet run
 - HTTPS: https://localhost:5001
 - Swagger UI: http://localhost:5000/swagger
 
+### Страницы сайта
+
+- `/` - Главная страница
+- `/Account/Register` - Регистрация
+- `/Account/Login` - Вход
+- `/Account/Profile` - Профиль пользователя (требует авторизации)
+- `/Account/Logout` - Выход
+
 ### Создание и применение миграций
 
 ```bash
 cd src/VibeApp.Api
 
 # Создать миграцию
-dotnet ef migrations add InitialCreate
+dotnet ef migrations add MigrationName
 
 # Применить миграцию
 dotnet ef database update
@@ -91,10 +113,16 @@ dotnet ef database update
 ```
 vibe-app/
 ├── src/
-│   └── VibeApp.Api/          # Основной API проект
+│   └── VibeApp.Api/          # Основной проект
 │       ├── Controllers/       # API контроллеры
 │       ├── Data/             # DbContext и модели данных
+│       ├── Pages/            # Razor Pages (UI)
+│       │   ├── Account/      # Страницы авторизации
+│       │   ├── Shared/       # Общие компоненты (Layout)
+│       │   └── Index.cshtml  # Главная страница
+│       ├── Migrations/       # EF Core миграции
 │       ├── Properties/       # Настройки запуска
+│       ├── wwwroot/          # Статические файлы
 │       ├── appsettings.json  # Конфигурация
 │       └── Program.cs        # Точка входа приложения
 ├── docs/
@@ -118,6 +146,27 @@ vibe-app/
 2. Обновите `AppDbContext` для включения новых `DbSet<>`
 3. Создайте и примените миграцию
 
+### База данных Identity
+
+Приложение использует стандартные таблицы ASP.NET Core Identity:
+- `AspNetUsers` - Пользователи
+- `AspNetRoles` - Роли
+- `AspNetUserRoles` - Связь пользователей и ролей
+- `AspNetUserClaims` - Claims пользователей
+- `AspNetUserLogins` - Внешние логины
+- `AspNetUserTokens` - Токены пользователей
+- `AspNetRoleClaims` - Claims ролей
+
+## Настройки безопасности
+
+Настройки паролей в `Program.cs`:
+- Минимальная длина: 6 символов
+- Требуется цифра: Да
+- Требуется строчная буква: Да
+- Требуется заглавная буква: Да
+- Требуется специальный символ: Нет
+- Уникальный email: Да
+
 ## Troubleshooting
 
 ### Ошибка подключения к PostgreSQL
@@ -132,6 +181,15 @@ vibe-app/
 - Проверьте логи в Render Dashboard
 - Убедитесь, что переменная `DATABASE_URL` правильно настроена
 - Проверьте, что health check endpoint `/health` доступен
+
+### Ошибки миграций
+
+Если миграции не применяются:
+```bash
+cd src/VibeApp.Api
+dotnet ef database drop  # Удалить базу (ОСТОРОЖНО!)
+dotnet ef database update  # Применить миграции заново
+```
 
 ## Лицензия
 

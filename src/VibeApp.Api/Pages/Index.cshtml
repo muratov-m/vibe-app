@@ -1,0 +1,35 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Главная";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto text-center text-white">
+            <h1 class="display-4 mb-4">Добро пожаловать в VibeApp</h1>
+            <p class="lead mb-4">Минимальный ASP.NET Core сайт с авторизацией</p>
+            
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="alert alert-light" role="alert">
+                    <h4>Привет, @User.Identity.Name!</h4>
+                    <p>Вы успешно авторизованы</p>
+                    <a asp-page="/Account/Profile" class="btn btn-primary">Перейти в профиль</a>
+                </div>
+            }
+            else
+            {
+                <div class="card auth-card">
+                    <div class="card-body text-dark">
+                        <h5 class="card-title">Начните работу</h5>
+                        <p class="card-text">Войдите или зарегистрируйтесь для доступа к функциям сайта</p>
+                        <a asp-page="/Account/Login" class="btn btn-primary me-2">Вход</a>
+                        <a asp-page="/Account/Register" class="btn btn-outline-primary">Регистрация</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
