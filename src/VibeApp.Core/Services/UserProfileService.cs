@@ -43,23 +43,26 @@ public class UserProfileService : IUserProfileService
             
             // Get IDs from import list
             var importIds = dtos.Select(d => d.Id).ToHashSet();
+            var existingProfileIdsSet = existingProfileIds.ToHashSet();
             
-            // Find profile IDs to delete (exist in DB but not in import list)
-            var profileIdsToDelete = existingProfileIds.Where(id => !importIds.Contains(id)).ToList();
-            
-            // Delete profiles not in import list
-            foreach (var profileId in profileIdsToDelete)
+            // Step 1: Create new profiles (exist in import list but not in DB)
+            var newProfiles = dtos.Where(dto => !existingProfileIdsSet.Contains(dto.Id)).ToList();
+            foreach (var dto in newProfiles)
             {
-                // Delete embedding first
-                await _embeddingService.DeleteEmbeddingAsync(profileId);
-                
-                // Delete profile
-                await _userProfileRepository.DeleteAsync(profileId);
-                result.Deleted++;
+                try
+                {
+                    await CreateNewProfile(dto);
+                    result.Created++;
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Error creating profile ID {dto.Id}: {ex.Message}");
+                }
             }
             
-            // Process each profile in import list
-            foreach (var dto in dtos)
+            // Step 2: Update existing profiles (exist in both import list and DB)
+            var existingProfiles = dtos.Where(dto => existingProfileIdsSet.Contains(dto.Id)).ToList();
+            foreach (var dto in existingProfiles)
             {
                 try
                 {
@@ -67,24 +70,36 @@ public class UserProfileService : IUserProfileService
                     var existingProfile = await _userProfileRepository.GetQueryable()
                         .Include(p => p.Skills)
                         .Include(p => p.LookingFor)
-                        .FirstOrDefaultAsync(p => p.Id == dto.Id);
+                        .FirstOrDefaultAsync(p => p.Id == dto.Id, cancellationToken);
                     
                     if (existingProfile != null)
                     {
-                        // Update existing profile
                         await UpdateExistingProfile(existingProfile, dto);
                         result.Updated++;
-                    }
-                    else
-                    {
-                        // Create new profile
-                        await CreateNewProfile(dto);
-                        result.Created++;
                     }
                 }
                 catch (Exception ex)
                 {
-                    result.Errors.Add($"Error processing profile ID {dto.Id}: {ex.Message}");
+                    result.Errors.Add($"Error updating profile ID {dto.Id}: {ex.Message}");
+                }
+            }
+            
+            // Step 3: Delete old profiles (exist in DB but not in import list)
+            var profileIdsToDelete = existingProfileIds.Where(id => !importIds.Contains(id)).ToList();
+            foreach (var profileId in profileIdsToDelete)
+            {
+                try
+                {
+                    // Delete embedding first
+                    await _embeddingService.DeleteEmbeddingAsync(profileId, cancellationToken);
+                    
+                    // Delete profile
+                    await _userProfileRepository.DeleteAsync(profileId);
+                    result.Deleted++;
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Error deleting profile ID {profileId}: {ex.Message}");
                 }
             }
             
