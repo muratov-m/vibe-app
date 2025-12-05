@@ -485,3 +485,97 @@ Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
   - Использование --no-restore для оптимизации build и publish
 - Результат: Правильное разрешение зависимостей между проектами при сборке на Render.com
 
+### Prompt 16: Simplify Logging Rules
+```
+Ты запустался с @VIBE_LOG.md 
+Давай перепишем правила
+При каждом запросе нужно фиксировать мой промпт и кратко, что было сделано.
+Если происходит правка от меня добавлял новую запись в историю.
+Исправь текущие правила cursorrules чтобы не было путаницы
+```
+
+### Actions Taken
+- Упрощены правила логирования в .cursorrules
+- Каждый запрос пользователя = отдельная запись в логе (включая исправления/follow-ups)
+- Формат: номер промпта, текст запроса, краткий список действий
+- Убрана сложная структура с вложенными "User Feedback and Corrections"
+- Workflow: log prompt → make changes → update log with brief summary
+
+---
+
+## Prompt #17
+
+### User Request
+```
+Давай теперь в проекте Core сделаем Gateway для общения с OpenAI через официальную библиотеку для net core
+Будем использовать OpenAI.Chat
+```
+
+### Actions Taken
+- Добавлен NuGet пакет `OpenAI` (v2.7.0) в проект VibeApp.Core
+- Создан Gateway интерфейс `IOpenAIGateway` в `Interfaces/IOpenAIGateway.cs`
+- Создана реализация `OpenAIGateway` в `Gateways/OpenAIGateway.cs` с поддержкой:
+  - Chat Completions (обычные через `CreateChatCompletionAsync`)
+  - Streaming Chat Completions (через `CreateChatCompletionStreamAsync`)
+  - Настраиваемые параметры: model, temperature, maxTokens
+  - Использование атрибута `[EnumeratorCancellation]` для правильной обработки cancellation token в async iterator
+- Добавлена конфигурация `OpenAI:ApiKey` в `appsettings.json` и `appsettings.Development.json`
+- Gateway зарегистрирован как Singleton в DI через `ServiceCollectionExtensions.AddCoreServices()`
+- Создана документация:
+  - Обновлен README.md с описанием OpenAI Gateway и примерами использования
+  - Создан файл `docs/OPENAI_GATEWAY_EXAMPLE.md` с подробными примерами:
+    - Простой вопрос-ответ
+    - Контекстный диалог
+    - Streaming ответ
+    - Анализ профиля пользователя
+    - Использование в API Controller
+    - Обработка ошибок
+- Исправлен баг в VibeApp.Data: убран несуществующий метод `UseQuerySplittingBehavior`
+- Проект успешно компилируется в Debug и Release режимах
+- Используется официальная библиотека OpenAI для .NET (OpenAI.Chat)
+
+---
+
+## Prompt #18
+
+### User Request
+```
+не нужны комментарии очевидные
+
+OpenAI ApiKey нужно получать из enviroment а не из конфига
+```
+
+### Actions Taken
+- Изменен OpenAIGateway: API ключ теперь читается из environment variable `OPENAI_API_KEY`
+- Удалены очевидные комментарии из OpenAIGateway.cs
+- Обновлена документация в README.md и OPENAI_GATEWAY_EXAMPLE.md
+- Убрана конфигурация OpenAI:ApiKey из appsettings.json файлов
+
+---
+
+## Prompt #19
+
+### User Request
+```
+есть такие ошибки и warning
+
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+Failed executing DbCommand - CREATE TABLE "UserProfileEmbeddings" already exists
+Npgsql.PostgresException: 42P07: relation "UserProfileEmbeddings" already exists
+
+warn: Microsoft.EntityFrameworkCore.Query[20504]
+Compiling a query which loads related collections for more than one collection navigation
+QuerySplittingBehavior not configured - can cause slow queries
+```
+
+### Actions Taken
+- Исправлена ошибка миграции: сделал миграцию `AddUserProfileEmbedding` идемпотентной
+  - Добавлена проверка существования таблицы перед созданием (IF NOT EXISTS)
+  - Миграция теперь безопасно запускается повторно
+  - Использован SQL DO блок с проверкой pg_tables
+- Исправлено предупреждение QuerySplittingBehavior:
+  - Настроен `QuerySplittingBehavior.SplitQuery` в DbContext конфигурации
+  - Это улучшает производительность при загрузке нескольких связанных коллекций
+  - Вместо одного большого JOIN будет несколько оптимизированных запросов
+- Обе проблемы решены и приложение должно запускаться без ошибок
+

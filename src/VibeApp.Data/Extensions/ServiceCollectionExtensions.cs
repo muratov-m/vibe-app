@@ -42,7 +42,13 @@ public static class ServiceCollectionExtensions
             }
             
             services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(connectionString, o => o.UseVector()));
+            {
+                options.UseNpgsql(connectionString, o => o.UseVector());
+                
+                // Configure query splitting behavior for better performance with multiple includes
+                // This prevents the warning: "Compiling a query which loads related collections..."
+                options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            });
         }
 
         // Register repositories
