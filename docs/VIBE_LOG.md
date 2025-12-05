@@ -427,7 +427,7 @@ Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
 - Улучшен IRepository: добавлен метод FirstOrDefaultAsync для фильтрации на уровне БД
 - Исправлено: Все запросы по ID теперь выполняются на уровне БД, а не через GetAllAsync + фильтр в памяти
 
-### User Feedback and Corrections
+#### User Feedback and Corrections
 
 **Исправление 1: Убран IServiceProvider из сервисов**
 - Проблема: Использовался IServiceProvider напрямую в UserProfileProcessingService (Service Locator антипаттерн)
@@ -449,10 +449,39 @@ Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
   - Все запросы теперь выполняются на уровне БД с WHERE clause
   - Используется .Select() для получения только нужных полей (например, только ID)
   - Все .Include() применяются до материализации
+- Результат оптимизации:
+  - SQL генерируется правильно: `SELECT * FROM Table WHERE condition`
+  - Минимальное потребление памяти
+  - Использование индексов PostgreSQL
+  - Быстрая работа даже с большими таблицами
 
-**Результат оптимизации:**
-- SQL генерируется правильно: `SELECT * FROM Table WHERE condition`
-- Минимальное потребление памяти
-- Использование индексов PostgreSQL
-- Быстрая работа даже с большими таблицами
+### Prompt 15: Fix Render Deployment - Multi-Project Build
+```
+Проект перестал деплоиться на render
+Проверь dockerfile и @render.yaml
+Ошибки: CS0234 - The type or namespace name 'Core/Data' does not exist in namespace 'VibeApp'
+```
+
+### Actions Taken
+- Обнаружена проблема: Dockerfile копирует только VibeApp.Api, но не VibeApp.Core и VibeApp.Data
+- Исправлен Dockerfile для поддержки многослойной архитектуры:
+  - Копируется solution файл (VibeApp.sln)
+  - Копируются все .csproj файлы (VibeApp.Core, VibeApp.Data, VibeApp.Api)
+  - Выполняется restore для всего решения через .sln
+  - Копируются все исходные коды всех проектов
+  - Build выполняется для всего solution
+  - Publish выполняется для главного проекта (Api) с --no-restore
+- Использование solution файла обеспечивает правильное разрешение зависимостей между проектами
+
+#### User Feedback and Corrections
+
+**Исправление: Build через solution файл вместо отдельных проектов**
+- Проблема: Dockerfile пытался билдить только VibeApp.Api проект напрямую, что не разрешало зависимости правильно
+- Предложение пользователя: "может нужно solution билдить?"
+- Решение: 
+  - Копируется VibeApp.sln в Docker
+  - `dotnet restore "VibeApp.sln"` выполняется для всего solution
+  - `dotnet build "VibeApp.sln"` выполняется для всего solution с правильным порядком зависимостей
+  - Использование --no-restore для оптимизации build и publish
+- Результат: Правильное разрешение зависимостей между проектами при сборке на Render.com
 

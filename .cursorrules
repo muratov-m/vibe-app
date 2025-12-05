@@ -7,10 +7,11 @@ Backend Web API project for Vibe Coding competition using ASP.NET Core 9.0 with 
 
 ### 1. Logging Requirement
 - **ALWAYS** log every user prompt and actions taken to `docs/VIBE_LOG.md`
-- **ALWAYS** log user corrections and feedback in separate section
+- **ALWAYS** log user corrections and feedback in separate section for EACH prompt
 - Format: Date, prompt text, list of actions
 - Log BEFORE making changes
-- When user points out mistakes or suggests improvements, document them under "User Feedback and Corrections"
+- When user points out mistakes or suggests improvements, document them under "#### User Feedback and Corrections" subsection AFTER the actions for that specific prompt
+- Each prompt should have its own "User Feedback and Corrections" section if user provides corrections
 
 ### 2. Technology Stack
 - **Backend**: ASP.NET Core 9.0 Web API
@@ -71,6 +72,7 @@ Project must work in BOTH environments:
 1. Log user prompt to `docs/VIBE_LOG.md`
 2. Make requested changes
 3. Update log with actions taken
-4. **If user provides corrections**: Add "User Feedback and Corrections" section to log
-5. Ensure works locally AND on Render.com
-6. Do NOT create documentation files unless explicitly asked
+4. **If user provides corrections**: Add "#### User Feedback and Corrections" subsection to that specific prompt in log
+5. Each prompt gets its own corrections section (not one global section)
+6. Ensure works locally AND on Render.com
+7. Do NOT create documentation files unless explicitly asked
