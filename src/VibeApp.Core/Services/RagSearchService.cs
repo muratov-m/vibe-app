@@ -191,8 +191,8 @@ Based on the profiles above, answer the user's question. Mention the most releva
         {
             var response = await _openAIGateway.CreateChatCompletionAsync(
                 messages,
-                model: "gpt-5.1",
-                temperature: 0.3f,
+                model: "gpt-4.1-nano",
+                temperature: 0.2f,
                 cancellationToken: cancellationToken);
 
             return response;
