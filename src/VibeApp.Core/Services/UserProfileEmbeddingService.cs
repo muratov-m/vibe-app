@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pgvector;
@@ -6,22 +7,22 @@ using VibeApp.Core.Interfaces;
 
 namespace VibeApp.Core.Services;
 
-/// <summary>
-/// Service for managing user profile embeddings
-/// </summary>
 public class UserProfileEmbeddingService : IUserProfileEmbeddingService
 {
     private readonly IRepository<UserProfile> _userProfileRepository;
     private readonly IRepository<UserProfileEmbedding> _embeddingRepository;
+    private readonly IOpenAIGateway _openAIGateway;
     private readonly ILogger<UserProfileEmbeddingService> _logger;
 
     public UserProfileEmbeddingService(
         IRepository<UserProfile> userProfileRepository,
         IRepository<UserProfileEmbedding> embeddingRepository,
+        IOpenAIGateway openAIGateway,
         ILogger<UserProfileEmbeddingService> logger)
     {
         _userProfileRepository = userProfileRepository;
         _embeddingRepository = embeddingRepository;
+        _openAIGateway = openAIGateway;
         _logger = logger;
     }
 
@@ -100,26 +101,66 @@ public class UserProfileEmbeddingService : IUserProfileEmbeddingService
         return await _embeddingRepository.FirstOrDefaultAsync(e => e.UserProfileId == userProfileId);
     }
 
-    /// <summary>
-    /// Generate embedding from user profile
-    /// This is a placeholder method - actual implementation will use OpenAI or similar service
-    /// </summary>
-    private Task<Vector> GenerateEmbeddingAsync(UserProfile profile, CancellationToken cancellationToken)
+    private async Task<Vector> GenerateEmbeddingAsync(UserProfile profile, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Generating embedding for profile: {Name}", profile.Name);
+        var profileText = BuildProfileText(profile);
+        _logger.LogInformation("Generating embedding for profile: {Name}, text length: {Length}", 
+            profile.Name, profileText.Length);
 
-        // TODO: Implement actual embedding generation logic
-        // For now, return a zero vector of dimension 1536 (OpenAI embedding size)
-        var embeddingArray = new float[1536];
-        Array.Fill(embeddingArray, 0f);
+        var embeddingArray = await _openAIGateway.GetEmbeddingAsync(profileText, cancellationToken: cancellationToken);
         
-        // In real implementation, you would:
-        // 1. Combine profile text (name, bio, skills, etc.)
-        // 2. Call embedding API (e.g., OpenAI)
-        // 3. Return the generated embedding
+        return new Vector(embeddingArray);
+    }
+
+    private static string BuildProfileText(UserProfile profile)
+    {
+        var sb = new StringBuilder();
+
+        // Name and contacts
+        sb.AppendLine($"Name: {profile.Name}");
         
-        var vector = new Vector(embeddingArray);
-        return Task.FromResult(vector);
+        // Bio - most important for semantic search
+        if (!string.IsNullOrWhiteSpace(profile.Bio))
+            sb.AppendLine($"Bio: {profile.Bio}");
+
+        // Skills
+        if (profile.Skills?.Any() == true)
+        {
+            var skills = string.Join(", ", profile.Skills.Select(s => s.Skill));
+            sb.AppendLine($"Skills: {skills}");
+        }
+
+        // Looking for - networking goals
+        if (profile.LookingFor?.Any() == true)
+        {
+            var lookingFor = string.Join(", ", profile.LookingFor.Select(l => l.LookingFor));
+            sb.AppendLine($"Looking for: {lookingFor}");
+        }
+
+        // Startup info
+        if (profile.HasStartup)
+        {
+            sb.AppendLine("Has startup: Yes");
+            if (!string.IsNullOrWhiteSpace(profile.StartupName))
+                sb.AppendLine($"Startup name: {profile.StartupName}");
+            if (!string.IsNullOrWhiteSpace(profile.StartupStage))
+                sb.AppendLine($"Startup stage: {profile.StartupStage}");
+            if (!string.IsNullOrWhiteSpace(profile.StartupDescription))
+                sb.AppendLine($"Startup description: {profile.StartupDescription}");
+        }
+
+        // Collaboration
+        if (!string.IsNullOrWhiteSpace(profile.CanHelp))
+            sb.AppendLine($"Can help with: {profile.CanHelp}");
+        
+        if (!string.IsNullOrWhiteSpace(profile.NeedsHelp))
+            sb.AppendLine($"Needs help with: {profile.NeedsHelp}");
+
+        // AI usage
+        if (!string.IsNullOrWhiteSpace(profile.AiUsage))
+            sb.AppendLine($"AI usage: {profile.AiUsage}");
+
+        return sb.ToString().Trim();
     }
 }
 

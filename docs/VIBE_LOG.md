@@ -579,3 +579,31 @@ QuerySplittingBehavior not configured - can cause slow queries
   - Вместо одного большого JOIN будет несколько оптимизированных запросов
 - Обе проблемы решены и приложение должно запускаться без ошибок
 
+---
+
+## Prompt #20
+
+### User Request
+```
+Реализовать реальный расчет Embedding через OpenAIGateway (добавить GetEmbedding).
+В UserProfileEmbeddingService построить строку с основной информацией о пользователе для RAG поиска.
+```
+
+### Actions Taken
+- Добавлен метод `GetEmbeddingAsync` в интерфейс `IOpenAIGateway`
+- Реализован `GetEmbeddingAsync` в `OpenAIGateway` с использованием модели `text-embedding-3-small`
+- Обновлен `UserProfileEmbeddingService`:
+  - Добавлена зависимость на `IOpenAIGateway`
+  - Реализован метод `BuildProfileText` для построения текстового представления профиля
+  - `GenerateEmbeddingAsync` теперь вызывает OpenAI API для реального расчета embeddings
+- Текст профиля для RAG включает:
+  - Имя пользователя
+  - Био (профессиональное описание)
+  - Навыки (skills)
+  - Что ищет (looking for)
+  - Информация о стартапе (название, стадия, описание)
+  - Чем может помочь (can help)
+  - В чём нужна помощь (needs help)
+  - Использование AI (ai usage)
+- Структура текста оптимизирована для семантического поиска (RAG)
+

@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
+using OpenAI.Embeddings;
 using VibeApp.Core.Interfaces;
 
 namespace VibeApp.Core.Gateways;
@@ -85,6 +86,32 @@ public class OpenAIGateway : IOpenAIGateway
         }
 
         _logger.LogInformation("Streaming chat completion completed for model {Model}", model);
+    }
+
+    public async Task<float[]> GetEmbeddingAsync(
+        string text,
+        string model = "text-embedding-3-small",
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Generating embedding with model {Model}, text length: {Length}", model, text.Length);
+
+            var openAiClient = new OpenAIClient(_apiKey);
+            var embeddingClient = openAiClient.GetEmbeddingClient(model);
+            var embedding = await embeddingClient.GenerateEmbeddingAsync(text, cancellationToken: cancellationToken);
+
+            var vector = embedding.Value.ToFloats().ToArray();
+            
+            _logger.LogInformation("Embedding generated successfully. Dimension: {Dimension}", vector.Length);
+
+            return vector;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating embedding with model {Model}", model);
+            throw;
+        }
     }
 }
 
