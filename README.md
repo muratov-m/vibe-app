@@ -9,6 +9,7 @@
 - ✅ ASP.NET Core Identity для авторизации
 - ✅ **UserProfile API** - управление расширенными профилями пользователей
 - ✅ **User Profile Embeddings** - автоматическая генерация векторных представлений профилей (pgvector)
+- ✅ **OpenAI Gateway** - интеграция с OpenAI Chat Completions API
 - ✅ **Простая архитектура** - все через constructor injection, без Service Locator
 - ✅ **Postman коллекция** для тестирования API
 - ✅ PostgreSQL для хранения данных
@@ -23,6 +24,7 @@
 - Razor Pages
 - PostgreSQL (через Npgsql.EntityFrameworkCore.PostgreSQL)
 - **pgvector** - векторные расширения для PostgreSQL
+- **OpenAI** - официальная библиотека OpenAI для .NET
 - Bootstrap 5
 - Docker
 - Swagger/OpenAPI
@@ -162,6 +164,80 @@ curl -X POST http://localhost:5000/api/userprofile/import \
 ```
 
 Или используйте Swagger UI: http://localhost:5000/swagger
+
+## OpenAI Gateway
+
+Приложение включает Gateway для работы с OpenAI Chat API через официальную библиотеку OpenAI для .NET.
+
+### Настройка
+
+Установите environment variable `OPENAI_API_KEY`:
+
+**Локально (Windows PowerShell):**
+```powershell
+$env:OPENAI_API_KEY="sk-your-api-key-here"
+```
+
+**Локально (Linux/macOS):**
+```bash
+export OPENAI_API_KEY="sk-your-api-key-here"
+```
+
+**Render.com:**
+Добавьте environment variable `OPENAI_API_KEY` в настройках Web Service
+
+### Использование в коде
+
+```csharp
+public class MyService
+{
+    private readonly IOpenAIGateway _openAIGateway;
+
+    public MyService(IOpenAIGateway openAIGateway)
+    {
+        _openAIGateway = openAIGateway;
+    }
+
+    public async Task<string> GetChatResponse()
+    {
+        var messages = new[]
+        {
+            ChatMessage.CreateSystemMessage("You are a helpful assistant."),
+            ChatMessage.CreateUserMessage("What is the capital of France?")
+        };
+
+        // Обычный ответ
+        var response = await _openAIGateway.CreateChatCompletionAsync(
+            messages,
+            model: "gpt-4o-mini",
+            temperature: 0.7f
+        );
+
+        return response;
+    }
+
+    public async IAsyncEnumerable<string> GetStreamingResponse()
+    {
+        var messages = new[]
+        {
+            ChatMessage.CreateSystemMessage("You are a helpful assistant."),
+            ChatMessage.CreateUserMessage("Tell me a story.")
+        };
+
+        // Streaming ответ
+        await foreach (var chunk in _openAIGateway.CreateChatCompletionStreamAsync(messages))
+        {
+            yield return chunk;
+        }
+    }
+}
+```
+
+### Параметры
+
+- `model` - модель OpenAI (по умолчанию: `gpt-4o-mini`)
+- `temperature` - "творческость" ответа, 0.0-2.0 (по умолчанию: 0.7)
+- `maxTokens` - максимальное количество токенов в ответе (опционально)
 
 ## Тестирование API
 
