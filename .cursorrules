@@ -3,14 +3,58 @@
 ## Project Overview
 Backend Web API project for Vibe Coding competition using ASP.NET Core 9.0 with PostgreSQL.
 
+## ⚠️ HACKATHON CONTEXT - READ FIRST!
+**This is a Vibe Coding hackathon project. 40% of the final score depends on proper `docs/VIBE_LOG.md` documentation!**
+
+The jury evaluates:
+- How we leverage AI to overcome technical hurdles
+- Our process organization and pipeline
+- Errors encountered and how they were resolved
+- Iterations: what didn't work → what helped → final solution
+
+**DO NOT hide mistakes - they demonstrate real AI orchestration process!**
+
 ## CRITICAL RULES
 
-### 1. Logging Requirement
+### 1. Logging Requirement (CRITICAL - 40% of hackathon score!)
 - **ALWAYS** log every user prompt and actions taken to `docs/VIBE_LOG.md`
-- Format: Prompt number, user prompt text, brief list of actions taken
-- Each user request = new entry in log (including corrections/follow-ups)
-- Keep it concise and focused on what was actually done
 - Log BEFORE making changes
+- Each user request = new entry in log (including corrections/follow-ups)
+- **Record current time** (⏱️) in prompt header, especially for error fixes
+
+**MANDATORY STRUCTURE for each Prompt:**
+
+```markdown
+## Prompt #N ⏱️ HH:MM
+
+### User Request
+```
+Full text of user's prompt
+```
+
+### Actions Taken
+- What was done (brief)
+
+### Errors & Issues (if any)
+- What errors occurred
+- How they were resolved
+- What approaches didn't work
+
+### User Corrections (if user made manual fixes)
+- What user fixed manually
+- Why AI solution was suboptimal
+- What prompt/hint helped fix it
+
+### Technical Decisions
+- Why this approach was chosen
+- What alternatives were considered
+```
+
+**IMPORTANT for jury:**
+- Show ERRORS and how they were resolved (don't hide mistakes!)
+- Document when AI suggested a bad solution and what helped fix it
+- Describe the process: which prompt failed → which prompt worked
+- Show iterations: first attempt → correction → final result
 
 ### 2. Technology Stack
 - **Backend**: ASP.NET Core 9.0 Web API

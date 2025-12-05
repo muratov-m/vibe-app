@@ -1,6 +1,23 @@
 # Vibe Coding Competition - Development Log
 
-## 2025-12-05 - Initial Setup
+## 🚨 Key Errors & Fixes (for jury review)
+
+| # | Error | Root Cause | Fix | Prompt |
+|---|-------|------------|-----|--------|
+| 1 | Docker build failed on Render | Dockerfile only copied VibeApp.Api, missing Core/Data projects | Build entire solution (`dotnet build VibeApp.sln`) | #15 |
+| 2 | `CS0234: namespace 'Core' does not exist` | Multi-project dependencies not resolved | Copy all .csproj files, restore solution | #15 |
+| 3 | `42P07: relation "UserProfileEmbeddings" already exists` | Migration not idempotent | Added `IF NOT EXISTS` check | #19 |
+| 4 | `QuerySplittingBehavior not configured` warning | Multiple collection navigations without split | Configured `QuerySplittingBehavior.SplitQuery` | #19 |
+| 5 | Circular reference in JSON serialization | Navigation properties UserProfile↔UserSkill | Added `ReferenceHandler.IgnoreCycles` | #13 |
+| 6 | Service Locator anti-pattern | Injected IServiceProvider directly | Replaced with IServiceScopeFactory | #14 |
+| 7 | Memory inefficiency - loading all records | `GetAllAsync()` then filter in memory | Added `GetQueryable()`, filter at DB level | #14 |
+| 8 | Model `gpt-5-mini` doesn't exist | AI hallucinated model name | User corrected to `gpt-4o-mini` | #26 |
+| 9 | Incomplete model change | AI changed only Gateway, forgot Service | User manually fixed RagSearchService | #27 |
+| 10 | Rules written in Russian | AI used wrong language | User requested English | #29 |
+
+---
+
+## 2025-12-05 20:01 - Initial Setup
 
 ### Prompt 1: Project Creation
 ```
@@ -383,7 +400,7 @@ curl -X POST http://localhost:5000/api/userprofile/import \
 - Добавлены примеры запросов с реальными данными
 - Настроены переменные для удобного тестирования
 
-### Prompt 13: Fix Circular Reference Error
+### Prompt 13: Fix Circular Reference Error ⏱️ ~23:44
 ```
 На get {{base_url}}/api/userprofile/1
 получаю ошибку
@@ -397,7 +414,7 @@ Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
 - Проблема возникала из-за navigation properties: UserProfile → UserSkill → UserProfile
 - Теперь сериализация корректно обрабатывает циклические ссылки между сущностями
 
-### Prompt 14: Add User Profile Embedding Service with pgvector
+### Prompt 14: Add User Profile Embedding Service with pgvector ⏱️ ~00:44
 ```
 Нужно сделать сервис, который будет обрабатывать профиль пользователя UserProfile
 
@@ -455,7 +472,7 @@ Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
   - Использование индексов PostgreSQL
   - Быстрая работа даже с большими таблицами
 
-### Prompt 15: Fix Render Deployment - Multi-Project Build
+### Prompt 15: Fix Render Deployment - Multi-Project Build ⏱️ ~01:06
 ```
 Проект перестал деплоиться на render
 Проверь dockerfile и @render.yaml
@@ -553,7 +570,7 @@ OpenAI ApiKey нужно получать из enviroment а не из конф�
 
 ---
 
-## Prompt #19
+## Prompt #19 ⏱️ ~01:34
 
 ### User Request
 ```
@@ -719,7 +736,7 @@ QuerySplittingBehavior not configured - can cause slow queries
 
 ---
 
-## Prompt #26
+## Prompt #26 ⏱️ ~03:00
 
 ### User Request
 ```
@@ -733,7 +750,7 @@ QuerySplittingBehavior not configured - can cause slow queries
 
 ---
 
-## Prompt #27
+## Prompt #27 ⏱️ ~03:06
 
 ### User Request
 ```
@@ -745,3 +762,167 @@ QuerySplittingBehavior not configured - can cause slow queries
 - Пользователь изменил RagSearchService.cs: model на "gpt-4.1-nano", temperature на 0.2f
 - Все вызовы модели теперь используют gpt-4.1-nano
 
+### User Corrections
+- AI изменил только OpenAIGateway.cs, забыл про RagSearchService.cs
+- Пользователь вручную изменил model и temperature в RagSearchService.cs
+- **Урок:** При изменении конфигурации модели нужно проверять ВСЕ места использования
+
+---
+
+## Prompt #28
+
+### User Request
+```
+Я участвую в хакатоне, очень важно вести правильно vibe_log
+От этого зависит 40% успеха
+Давай посомтрим на текущие правила cursorrules и добавим больше деталей в vibe_log в будущем, важны ошибки, где приходилось исправлять и вносить правки с моей стороны
+```
+
+### Actions Taken
+- Прочитаны текущие правила из `.cursorrules` и весь `VIBE_LOG.md`
+- Проанализированы требования хакатона (40% за документацию!)
+- Обновлены правила логирования в `.cursorrules`:
+  - Добавлена обязательная структура записи с секциями
+  - Добавлены секции: Errors & Issues, User Corrections, Technical Decisions
+  - Подчёркнута важность показывать ошибки и итерации
+
+### Technical Decisions
+**Почему расширена структура лога:**
+- Правила хакатона явно требуют показывать "hit an error...and fixed it by prompting"
+- Жюри хочет видеть ПРОЦЕСС, а не только результат
+- Ошибки и исправления демонстрируют реальную работу с AI
+
+**Анализ текущего лога:**
+- Prompts #1-15: хороший формат с "User Feedback and Corrections" 
+- После Prompt #16: формат упростился, потеряны ценные детали
+- Примеры хороших записей: #14 (исправления Service Locator, оптимизация запросов), #15 (build через solution)
+
+### Retrospective Analysis (ретроспектива предыдущих промптов)
+**Примеры ошибок и исправлений, которые нужно было лучше задокументировать:**
+
+| Prompt | Ошибка AI | Исправление пользователя |
+|--------|-----------|--------------------------|
+| #14 | Использовал IServiceProvider (антипаттерн) | Указал на Service Locator, переделал на IServiceScopeFactory |
+| #14 | GetAllAsync() → фильтр в памяти | Указал на проблему, добавлен GetQueryable() |
+| #15 | Dockerfile билдил только Api проект | Предложил билдить solution |
+| #26 | Предложил gpt-5-mini (не существует) | Исправил на gpt-4o-mini |
+| #27 | Изменил не все места использования модели | Вручную исправил RagSearchService.cs |
+
+**Выводы для будущих записей:**
+1. Всегда фиксировать первый неудачный подход
+2. Писать какой prompt/подсказка помогла решить проблему
+3. Не стыдиться ошибок - это демонстрирует реальный процесс
+4. Показывать итерации: попытка 1 → feedback → попытка 2 → успех
+
+---
+
+## Prompt #29
+
+### User Request
+```
+правил должны быть на english
+```
+
+### Actions Taken
+- Translated all Russian text in `.cursorrules` to English
+- Updated logging requirement section with English instructions
+
+### User Corrections
+- AI wrote cursor rules in Russian, but project documentation should be in English
+- User requested English-only rules for consistency
+
+### Technical Decisions
+- Cursor rules kept in English for:
+  - Better compatibility with international teams
+  - Consistency with code and technical documentation
+  - Easier for jury to review (hackathon is international)
+
+---
+
+## Prompt #30
+
+### User Request
+```
+добавь в правилах что я участвую в hackathon и от правильного ведения этого файла зависит результат
+```
+
+### Actions Taken
+- Added prominent "HACKATHON CONTEXT" section at the top of `.cursorrules`
+- Emphasized that 40% of final score depends on VIBE_LOG documentation
+- Listed what jury evaluates: AI orchestration, process, errors, iterations
+- Added note: "DO NOT hide mistakes - they demonstrate real AI orchestration process!"
+
+### Technical Decisions
+- Placed hackathon context right after Project Overview for maximum visibility
+- Used warning emoji (⚠️) to draw attention
+- This ensures any AI reading the rules understands the critical importance of proper logging
+
+---
+
+## Prompt #31
+
+### User Request
+```
+добавь время и ошибки с которые пришлось исправить по коммитам, добавь это в текущий vibe_log
+```
+
+### Actions Taken
+- Ran `git log` to get commit history with timestamps
+- Analyzed fix commits: `f3e1d01`, `357b647`, `1f1c70a`, `198e972`
+- Added **Project Timeline & Commits Summary** section at the top of VIBE_LOG
+- Created table with all 17 commits and timestamps
+- Created **Key Errors & Fixes** table with 10 documented errors
+- Added **Development Stats**: start time, total commits, fix percentage
+
+### Errors & Issues
+- PowerShell syntax issue: `&&` is not valid in PowerShell, used `;` instead
+- First command failed, corrected on second attempt
+
+### Technical Decisions
+- Placed timeline at the very top for jury visibility
+- Used emojis (🔧, 🚨, 📊, 📈) for visual scanning
+- Highlighted fix commits in the timeline
+- Linked errors to specific prompt numbers for traceability
+- Calculated "fix percentage" (23.5%) to show iteration process
+
+---
+
+## Prompt #32
+
+### User Request
+```
+Git History не нужно добавлять и Development Stats
+
+Добавь информацию в промпты, если удается соотнести время и исправленные ошибки
+```
+
+### Actions Taken
+- Removed "Git History" table from VIBE_LOG (too verbose)
+- Removed "Development Stats" section
+- Kept "Key Errors & Fixes" table at top
+- Added timestamps (⏱️) to prompts with errors:
+  - Prompt #13 ~23:44 - Circular reference fix
+  - Prompt #14 ~00:44 - Service Locator, memory optimization
+  - Prompt #15 ~01:06 - Docker multi-project build
+  - Prompt #19 ~01:34 - Migration idempotency
+  - Prompt #26 ~03:00 - Model name error
+  - Prompt #27 ~03:06 - Model fix, incomplete change
+
+### User Corrections
+- AI added too much detail (full git history, stats)
+- User requested only relevant info directly in prompts
+- Simpler approach: timestamps in prompt titles, not separate tables
+
+---
+
+## Prompt #33 ⏱️ 03:15
+
+### User Request
+```
+Добавь информацию в правила про фиксирование текущего времени
+```
+
+### Actions Taken
+- Updated `.cursorrules` logging requirement section
+- Added rule: "Record current time (⏱️) in prompt header, especially for error fixes"
+- Updated mandatory structure template: `## Prompt #N ⏱️ HH:MM`
