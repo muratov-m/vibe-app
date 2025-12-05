@@ -7,8 +7,10 @@ Backend Web API project for Vibe Coding competition using ASP.NET Core 9.0 with 
 
 ### 1. Logging Requirement
 - **ALWAYS** log every user prompt and actions taken to `docs/VIBE_LOG.md`
+- **ALWAYS** log user corrections and feedback in separate section
 - Format: Date, prompt text, list of actions
 - Log BEFORE making changes
+- When user points out mistakes or suggests improvements, document them under "User Feedback and Corrections"
 
 ### 2. Technology Stack
 - **Backend**: ASP.NET Core 9.0 Web API
@@ -44,7 +46,16 @@ Project must work in BOTH environments:
 
 ### 6. Best Practices
 - Use async/await for database operations
-- Use dependency injection
+- Use dependency injection properly:
+  - **NEVER** inject `IServiceProvider` directly into services (Service Locator anti-pattern)
+  - Use constructor injection for all dependencies
+  - For background services needing scoped services, inject `IServiceScopeFactory` instead
+- Database query optimization:
+  - **NEVER** use `GetAllAsync().ToList()` then filter in memory
+  - Use `GetQueryable()` or LINQ methods that translate to SQL
+  - Apply filters with `.Where()` before `.ToList()` or `.FirstOrDefaultAsync()`
+  - Use `.Select()` to load only needed fields (projection)
+  - Use `FirstOrDefaultAsync(predicate)` instead of loading all and filtering
 - Add proper error handling and logging
 - Use DTOs for API responses
 - Health check endpoint required
@@ -60,5 +71,6 @@ Project must work in BOTH environments:
 1. Log user prompt to `docs/VIBE_LOG.md`
 2. Make requested changes
 3. Update log with actions taken
-4. Ensure works locally AND on Render.com
-5. Do NOT create documentation files unless explicitly asked
+4. **If user provides corrections**: Add "User Feedback and Corrections" section to log
+5. Ensure works locally AND on Render.com
+6. Do NOT create documentation files unless explicitly asked

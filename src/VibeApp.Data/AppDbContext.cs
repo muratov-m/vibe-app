@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Pgvector.EntityFrameworkCore;
 using VibeApp.Core.Entities;
 
 namespace VibeApp.Data;
@@ -13,10 +14,14 @@ public class AppDbContext : IdentityDbContext
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<UserSkill> UserSkills => Set<UserSkill>();
     public DbSet<UserLookingFor> UserLookingFors => Set<UserLookingFor>();
+    public DbSet<UserProfileEmbedding> UserProfileEmbeddings => Set<UserProfileEmbedding>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        // Enable pgvector extension
+        modelBuilder.HasPostgresExtension("vector");
         
         // Configure UserProfile
         modelBuilder.Entity<UserProfile>(entity =>
@@ -53,6 +58,23 @@ public class AppDbContext : IdentityDbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.LookingFor).HasMaxLength(200).IsRequired();
+        });
+        
+        // Configure UserProfileEmbedding
+        modelBuilder.Entity<UserProfileEmbedding>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserProfileId).IsUnique();
+            
+            // Configure vector column with 1536 dimensions (OpenAI embedding size)
+            entity.Property(e => e.Embedding)
+                .HasColumnType("vector(1536)")
+                .IsRequired();
+            
+            entity.HasOne(e => e.UserProfile)
+                .WithOne()
+                .HasForeignKey<UserProfileEmbedding>(e => e.UserProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

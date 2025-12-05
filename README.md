@@ -8,6 +8,8 @@
 - ✅ Профиль пользователя с возможностью изменения пароля
 - ✅ ASP.NET Core Identity для авторизации
 - ✅ **UserProfile API** - управление расширенными профилями пользователей
+- ✅ **User Profile Embeddings** - автоматическая генерация векторных представлений профилей (pgvector)
+- ✅ **Простая архитектура** - все через constructor injection, без Service Locator
 - ✅ **Postman коллекция** для тестирования API
 - ✅ PostgreSQL для хранения данных
 - ✅ Современный UI на Bootstrap 5
@@ -20,6 +22,7 @@
 - ASP.NET Core Identity
 - Razor Pages
 - PostgreSQL (через Npgsql.EntityFrameworkCore.PostgreSQL)
+- **pgvector** - векторные расширения для PostgreSQL
 - Bootstrap 5
 - Docker
 - Swagger/OpenAPI
@@ -30,16 +33,32 @@
 
 - .NET 9.0 SDK
 - PostgreSQL (или Docker для запуска PostgreSQL)
+- **pgvector extension** для PostgreSQL (для работы с embeddings)
 
 ### Настройка PostgreSQL локально
 
 #### Вариант 1: Docker
 ```bash
-docker run --name postgres-vibe -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=vibeapp -p 5432:5432 -d postgres:16
+# PostgreSQL с pgvector extension
+docker run --name postgres-vibe \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=vibeapp \
+  -p 5432:5432 \
+  -d pgvector/pgvector:pg16
 ```
 
 #### Вариант 2: Установленный PostgreSQL
 Создайте базу данных `vibeapp` с пользователем `postgres` и паролем `postgres`.
+
+**Установка pgvector extension:**
+- **Windows/macOS**: Скачайте и установите из [pgvector releases](https://github.com/pgvector/pgvector/releases)
+- **Linux**: `sudo apt install postgresql-16-pgvector` (для PostgreSQL 16)
+- **Render.com**: pgvector доступен по умолчанию
+
+После установки выполните в базе данных:
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
 
 ### Запуск приложения
 
@@ -154,6 +173,17 @@ curl -X POST http://localhost:5000/api/userprofile/import \
 
 Подробная инструкция: `docs/POSTMAN_GUIDE.md`
 
+### Автоматическая генерация Embeddings
+
+При создании или обновлении профиля пользователя автоматически генерируется векторное представление (embedding):
+
+1. **Синхронная обработка**: Embeddings генерируются в том же scope что и создание профиля
+2. **Простая архитектура**: Все зависимости через constructor injection, без сложных фоновых сервисов
+3. **Автоматическое удаление**: При удалении профиля embedding также удаляется
+4. **pgvector таблица**: Embeddings хранятся в таблице `UserProfileEmbeddings` с типом `vector(1536)`
+
+**Текущая реализация**: Генерация embedding является placeholder (возвращает нулевой вектор). В будущем здесь будет интеграция с OpenAI API или другим сервисом для генерации векторных представлений профиля.
+
 ### Вариант 2: Swagger UI
 
 Откройте http://localhost:5000/swagger и тестируйте через веб-интерфейс.
@@ -178,10 +208,12 @@ Invoke-RestMethod -Uri "http://localhost:5000/api/userprofile/import" `
 - Зависит от: VibeApp.Core, VibeApp.Data
 
 ### 2. **VibeApp.Core** - Слой бизнес-логики
-- Интерфейсы сервисов (`IUserService`, `IRepository<T>`)
-- Реализация бизнес-логики (`UserService`)
+- Интерфейсы сервисов (`IUserService`, `IUserProfileService`, `IUserProfileEmbeddingService`, `IRepository<T>`)
+- Реализация бизнес-логики (`UserService`, `UserProfileService`, `UserProfileEmbeddingService`)
+- Доменные модели (entities)
+- Все зависимости через constructor injection
 - Независим от конкретных технологий (EF Core, ASP.NET)
-- Зависит от: Microsoft.AspNetCore.Identity.EntityFrameworkCore (для IdentityUser)
+- Зависит от: Microsoft.AspNetCore.Identity.EntityFrameworkCore, Pgvector
 
 ### 3. **VibeApp.Data** - Слой доступа к данным
 - Entity Framework Core DbContext

@@ -397,3 +397,62 @@ Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
 - Проблема возникала из-за navigation properties: UserProfile → UserSkill → UserProfile
 - Теперь сериализация корректно обрабатывает циклические ссылки между сущностями
 
+### Prompt 14: Add User Profile Embedding Service with pgvector
+```
+Нужно сделать сервис, который будет обрабатывать профиль пользователя UserProfile
+
+Запускается асинхронно при обновлении информации пользователя
+
+Из профиля пользователя будет строиться embading (пока не реализуй логику рассчета embading)  
+
+Нужно сохранять emabding пользователя в pgvector таблицу в основной базе
+
+нужно добавить поддержку pgvector 
+
+При удалении пользователя удалять emabding
+```
+
+### Actions Taken
+- Добавлен пакет Pgvector.EntityFrameworkCore для поддержки векторов в PostgreSQL
+- Создана сущность UserProfileEmbedding для хранения embeddings с vector(1536) типом
+- Создан интерфейс IUserProfileEmbeddingService и реализация UserProfileEmbeddingService
+- При создании/обновлении профиля автоматически генерируется embedding (синхронно в том же scope)
+- При удалении профиля автоматически удаляется связанный embedding
+- Создана миграция AddUserProfileEmbedding для таблицы UserProfileEmbeddings
+- Включен pgvector extension в PostgreSQL
+- Placeholder для логики генерации embedding (возвращает нулевой вектор размерности 1536)
+- Все сервисы зарегистрированы в DI контейнере
+- Упрощена архитектура: удален фоновый сервис, embedding генерируется синхронно
+- Все зависимости получаются через constructor injection (никакого IServiceProvider)
+- Улучшен IRepository: добавлен метод FirstOrDefaultAsync для фильтрации на уровне БД
+- Исправлено: Все запросы по ID теперь выполняются на уровне БД, а не через GetAllAsync + фильтр в памяти
+
+### User Feedback and Corrections
+
+**Исправление 1: Убран IServiceProvider из сервисов**
+- Проблема: Использовался IServiceProvider напрямую в UserProfileProcessingService (Service Locator антипаттерн)
+- Решение: Заменен на IServiceScopeFactory для правильного DI
+- Финальное решение: Полностью убран фоновый сервис, все через constructor injection
+
+**Исправление 2: Оптимизация запросов к БД**
+- Проблема: Использовался GetAllAsync() для загрузки всех записей, затем фильтрация в памяти
+- Найдено в:
+  - `UserProfileEmbeddingService.GetEmbeddingAsync` - загружал все embeddings, фильтровал по UserProfileId
+  - `UserProfileEmbeddingService.DeleteEmbeddingAsync` - аналогично
+  - `UserProfileEmbeddingService.GenerateAndSaveEmbeddingAsync` - загружал все профили для получения одного
+  - `UserProfileService.ImportUserProfilesAsync` - загружал все профили для получения списка ID
+  - `UserProfileService.GetUserProfileByIdAsync` - загружал все профили для получения одного
+  - `UserProfileService.GetAllUserProfilesAsync` - правильно, но можно улучшить
+- Решение: 
+  - Заменен `GetAllAsync()` на `GetQueryable()` - возвращает IQueryable без материализации
+  - Добавлен метод `FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)` для фильтрации на уровне БД
+  - Все запросы теперь выполняются на уровне БД с WHERE clause
+  - Используется .Select() для получения только нужных полей (например, только ID)
+  - Все .Include() применяются до материализации
+
+**Результат оптимизации:**
+- SQL генерируется правильно: `SELECT * FROM Table WHERE condition`
+- Минимальное потребление памяти
+- Использование индексов PostgreSQL
+- Быстрая работа даже с большими таблицами
+

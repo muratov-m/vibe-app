@@ -13,15 +13,18 @@ public class UserProfileService : IUserProfileService
     private readonly IRepository<UserProfile> _userProfileRepository;
     private readonly IRepository<UserSkill> _userSkillRepository;
     private readonly IRepository<UserLookingFor> _userLookingForRepository;
+    private readonly IUserProfileEmbeddingService _embeddingService;
 
     public UserProfileService(
         IRepository<UserProfile> userProfileRepository,
         IRepository<UserSkill> userSkillRepository,
-        IRepository<UserLookingFor> userLookingForRepository)
+        IRepository<UserLookingFor> userLookingForRepository,
+        IUserProfileEmbeddingService embeddingService)
     {
         _userProfileRepository = userProfileRepository;
         _userSkillRepository = userSkillRepository;
         _userLookingForRepository = userLookingForRepository;
+        _embeddingService = embeddingService;
     }
 
     public async Task<BatchImportResult> ImportUserProfilesAsync(List<UserProfileImportDto> dtos, CancellationToken cancellationToken = default)
@@ -33,20 +36,25 @@ public class UserProfileService : IUserProfileService
 
         try
         {
-            // Get all existing profiles
-            var existingProfiles = await _userProfileRepository.GetAllAsync();
-            var existingProfilesList = existingProfiles.ToList();
+            // Get all existing profile IDs (only IDs, not full entities)
+            var existingProfileIds = await _userProfileRepository.GetQueryable()
+                .Select(p => p.Id)
+                .ToListAsync(cancellationToken);
             
             // Get IDs from import list
             var importIds = dtos.Select(d => d.Id).ToHashSet();
             
-            // Find profiles to delete (exist in DB but not in import list)
-            var profilesToDelete = existingProfilesList.Where(p => !importIds.Contains(p.Id)).ToList();
+            // Find profile IDs to delete (exist in DB but not in import list)
+            var profileIdsToDelete = existingProfileIds.Where(id => !importIds.Contains(id)).ToList();
             
             // Delete profiles not in import list
-            foreach (var profile in profilesToDelete)
+            foreach (var profileId in profileIdsToDelete)
             {
-                await _userProfileRepository.DeleteAsync(profile);
+                // Delete embedding first
+                await _embeddingService.DeleteEmbeddingAsync(profileId);
+                
+                // Delete profile
+                await _userProfileRepository.DeleteAsync(profileId);
                 result.Deleted++;
             }
             
@@ -55,7 +63,11 @@ public class UserProfileService : IUserProfileService
             {
                 try
                 {
-                    var existingProfile = existingProfilesList.FirstOrDefault(p => p.Id == dto.Id);
+                    // Load profile with related entities
+                    var existingProfile = await _userProfileRepository.GetQueryable()
+                        .Include(p => p.Skills)
+                        .Include(p => p.LookingFor)
+                        .FirstOrDefaultAsync(p => p.Id == dto.Id);
                     
                     if (existingProfile != null)
                     {
@@ -119,6 +131,9 @@ public class UserProfileService : IUserProfileService
         }
 
         await _userProfileRepository.AddAsync(userProfile);
+        
+        // Generate embedding synchronously (non-blocking for user, but in same transaction)
+        await _embeddingService.GenerateAndSaveEmbeddingAsync(dto.Id);
     }
 
     private async Task UpdateExistingProfile(UserProfile existingProfile, UserProfileImportDto dto)
@@ -162,24 +177,25 @@ public class UserProfileService : IUserProfileService
         }
 
         await _userProfileRepository.UpdateAsync(existingProfile);
+        
+        // Regenerate embedding synchronously
+        await _embeddingService.GenerateAndSaveEmbeddingAsync(existingProfile.Id);
     }
 
     public async Task<UserProfile?> GetUserProfileByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var profiles = await _userProfileRepository.GetAllAsync();
-        return profiles
+        return await _userProfileRepository.GetQueryable()
             .Include(p => p.Skills)
             .Include(p => p.LookingFor)
-            .FirstOrDefault(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync(CancellationToken cancellationToken = default)
     {
-        var profiles = await _userProfileRepository.GetAllAsync();
-        return profiles
+        return await _userProfileRepository.GetQueryable()
             .Include(p => p.Skills)
             .Include(p => p.LookingFor)
-            .ToList();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<UserProfile> UpdateUserProfileAsync(int id, UserProfileImportDto dto, CancellationToken cancellationToken = default)
@@ -202,6 +218,10 @@ public class UserProfileService : IUserProfileService
             return false;
         }
 
+        // Delete associated embedding first
+        await _embeddingService.DeleteEmbeddingAsync(id, cancellationToken);
+        
+        // Delete the profile (cascade will delete related entities)
         await _userProfileRepository.DeleteAsync(profile);
         return true;
     }

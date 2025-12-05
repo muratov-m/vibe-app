@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using VibeApp.Core.Entities;
 using VibeApp.Core.Interfaces;
@@ -23,9 +24,14 @@ public class Repository<T> : IRepository<T> where T : class, IEntity
         return await _dbSet.FindAsync(id);
     }
 
-    public virtual async Task<IQueryable<T>> GetAllAsync()
+    public virtual IQueryable<T> GetQueryable()
     {
-        return await Task.FromResult(_dbSet.AsQueryable());
+        return _dbSet.AsQueryable();
+    }
+
+    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+    {
+        return await _dbSet.FirstOrDefaultAsync(predicate);
     }
 
     public virtual async Task<T> AddAsync(T entity)
