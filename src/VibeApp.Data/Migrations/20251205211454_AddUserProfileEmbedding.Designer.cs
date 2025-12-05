@@ -13,7 +13,7 @@ using VibeApp.Data;
 namespace VibeApp.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251205201548_AddUserProfileEmbedding")]
+    [Migration("20251205211454_AddUserProfileEmbedding")]
     partial class AddUserProfileEmbedding
     {
         /// <inheritdoc />

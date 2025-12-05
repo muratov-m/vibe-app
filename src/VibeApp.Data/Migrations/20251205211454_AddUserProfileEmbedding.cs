@@ -13,10 +13,6 @@ namespace VibeApp.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Try to create vector extension, but don't fail if it doesn't exist
-            // On Render.com pgvector is available, locally it might not be installed
-            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS vector;", suppressTransaction: true);
-
             migrationBuilder.CreateTable(
                 name: "UserProfileEmbeddings",
                 columns: table => new
