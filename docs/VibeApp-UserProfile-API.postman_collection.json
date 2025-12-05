@@ -2,10 +2,133 @@
 	"info": {
 		"_postman_id": "vibe-app-userprofile-api",
 		"name": "VibeApp - UserProfile API",
-		"description": "API для управления профилями пользователей в VibeApp. Поддерживает пакетный импорт с синхронизацией БД.",
+		"description": "API для управления профилями пользователей в VibeApp. Поддерживает пакетный импорт с синхронизацией БД и RAG поиск.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "RAG Search",
+			"item": [
+				{
+					"name": "RAG Search (POST)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"Who here knows Rust and likes hiking?\",\n  \"topK\": 5,\n  \"generateResponse\": true,\n  \"minSimilarity\": 0.3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ragsearch/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ragsearch",
+								"search"
+							]
+						},
+						"description": "Поиск профилей пользователей с помощью RAG (Retrieval Augmented Generation).\n\n**Параметры:**\n- `query` - вопрос на естественном языке\n- `topK` - количество результатов (1-50, по умолчанию 5)\n- `generateResponse` - генерировать AI-ответ (по умолчанию true)\n- `minSimilarity` - минимальный порог схожести 0-1 (по умолчанию 0.3)\n\n**Примеры запросов:**\n- \"Who here knows Rust and likes hiking?\"\n- \"Find me someone who can help with machine learning\"\n- \"Looking for a co-founder with marketing experience\"\n- \"Кто разбирается в AI и работает со стартапами?\""
+					},
+					"response": []
+				},
+				{
+					"name": "RAG Search (GET - Quick)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/ragsearch/search?q=Who can help with machine learning?&top=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ragsearch",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "Who can help with machine learning?"
+								},
+								{
+									"key": "top",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Быстрый поиск через GET запрос.\n\n**Параметры:**\n- `q` - поисковый запрос (обязательный)\n- `top` - количество результатов (по умолчанию 5)"
+					},
+					"response": []
+				},
+				{
+					"name": "RAG Search - Find Co-founder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"Looking for a technical co-founder with backend experience\",\n  \"topK\": 10,\n  \"generateResponse\": true,\n  \"minSimilarity\": 0.25\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ragsearch/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ragsearch",
+								"search"
+							]
+						},
+						"description": "Пример поиска ко-фаундера с техническим бэкграундом."
+					},
+					"response": []
+				},
+				{
+					"name": "RAG Search - Without AI Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"Кто может помочь с тестированием и QA?\",\n  \"topK\": 5,\n  \"generateResponse\": false,\n  \"minSimilarity\": 0.3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ragsearch/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ragsearch",
+								"search"
+							]
+						},
+						"description": "Поиск без генерации AI-ответа (только список профилей). Быстрее и дешевле."
+					},
+					"response": []
+				}
+			],
+			"description": "RAG (Retrieval Augmented Generation) поиск по профилям пользователей.\n\nИспользует embeddings для семантического поиска и LLM для генерации ответа."
+		},
 		{
 			"name": "Import User Profiles (Batch)",
 			"request": {

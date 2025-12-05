@@ -25,7 +25,7 @@ public class OpenAIGateway : IOpenAIGateway
     public async Task<string> CreateChatCompletionAsync(
         IEnumerable<ChatMessage> messages,
         string model = "gpt-4o-mini",
-        float temperature = 0.7f,
+        float temperature = 0.2f,
         int? maxTokens = null,
         CancellationToken cancellationToken = default)
     {
@@ -59,7 +59,7 @@ public class OpenAIGateway : IOpenAIGateway
     public async IAsyncEnumerable<string> CreateChatCompletionStreamAsync(
         IEnumerable<ChatMessage> messages,
         string model = "gpt-4o-mini",
-        float temperature = 0.7f,
+        float temperature = 0.2f,
         int? maxTokens = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {

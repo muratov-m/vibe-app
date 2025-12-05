@@ -607,3 +607,26 @@ QuerySplittingBehavior not configured - can cause slow queries
   - Использование AI (ai usage)
 - Структура текста оптимизирована для семантического поиска (RAG)
 
+---
+
+## Prompt #21
+
+### User Request
+```
+Сделать новый контроллер API для RAG поиска по профилям пользователей.
+"The Agentic Search: A RAG chatbot that answers 'Who here knows Rust and likes hiking?'"
+Нужно сделать сервис, который будет строить embedding из вопроса пользователя для поиска похожих пользователей.
+```
+
+### Actions Taken
+- Создан `RagSearchRequestDto` и `RagSearchResponseDto` для API
+- Создан интерфейс `IRagSearchService` для RAG поиска
+- Реализован `RagSearchService`:
+  - Генерация embedding из вопроса пользователя
+  - Поиск похожих профилей через pgvector cosine distance
+  - Генерация естественного ответа через LLM (опционально)
+- Создан `RagSearchController` с endpoint `/api/rag/search`
+- Зарегистрирован сервис в DI контейнере
+- Оптимизирован vector search: двухэтапный запрос (сначала IDs + distance, потом данные)
+- Добавлены примеры RAG Search в Postman collection (4 запроса)
+
