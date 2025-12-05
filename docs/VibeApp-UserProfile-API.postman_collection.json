@@ -1,0 +1,153 @@
+{
+	"info": {
+		"_postman_id": "vibe-app-userprofile-api",
+		"name": "VibeApp - UserProfile API",
+		"description": "API для управления профилями пользователей в VibeApp. Поддерживает пакетный импорт с синхронизацией БД.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Import User Profiles (Batch)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n  {\n    \"id\": 1,\n    \"name\": \"Elena Saf\",\n    \"telegram\": \"dmitry_dev\",\n    \"linkedin\": \"https://www.linkedin.com/in/esaf20\",\n    \"bio\": \"QA Lead with department management experience, transformation coaching\",\n    \"skills\": [\n      \"коучинг\",\n      \"Soft Skills менторинг\",\n      \"QA менторинг\",\n      \"тестирование\"\n    ],\n    \"hasStartup\": false,\n    \"startupStage\": \"\",\n    \"startupDescription\": \"\",\n    \"startupName\": \"\",\n    \"lookingFor\": [\n      \"Единомышленников\"\n    ],\n    \"canHelp\": \"- выявление и умение справляться с ограничениями, установками, страхами мешающих росту и движению к цели\\n- Как оппонент для брейнсторма идей или затыков\\n- QA и процессный менторинг\",\n    \"needsHelp\": \"Сейчас в поиске проектов для себя как QA Lead + AI для жизни как информирование + несомненно нетворкинг\",\n    \"aiUsage\": \"\",\n    \"email\": \"\",\n    \"photo\": \"\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Иван Петров\",\n    \"telegram\": \"ivan_dev\",\n    \"linkedin\": \"https://www.linkedin.com/in/ivanpetrov\",\n    \"bio\": \"Senior Backend Developer с опытом работы с .NET и микросервисами\",\n    \"skills\": [\n      \"C#\",\n      \".NET Core\",\n      \"Микросервисы\",\n      \"PostgreSQL\",\n      \"Docker\"\n    ],\n    \"hasStartup\": true,\n    \"startupStage\": \"MVP\",\n    \"startupDescription\": \"Платформа для автоматизации бизнес-процессов\",\n    \"startupName\": \"AutoFlow\",\n    \"lookingFor\": [\n      \"Инвесторов\",\n      \"Co-founder\"\n    ],\n    \"canHelp\": \"Архитектура backend систем, оптимизация производительности, code review\",\n    \"needsHelp\": \"Поиск первых клиентов, маркетинг\",\n    \"aiUsage\": \"Использую ChatGPT для генерации документации и code review\",\n    \"email\": \"ivan@example.com\",\n    \"photo\": \"https://example.com/photos/ivan.jpg\"\n  }\n]"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/userprofile/import",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"userprofile",
+						"import"
+					]
+				},
+				"description": "Импортирует массив профилей пользователей и синхронизирует с БД.\n\n**ВАЖНО**: Удаляет пользователей, которых нет в импортируемом списке!\n\nВозвращает статистику: created, updated, deleted."
+			},
+			"response": []
+		},
+		{
+			"name": "Get All User Profiles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/userprofile",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"userprofile"
+					]
+				},
+				"description": "Получает все профили пользователей со всеми связанными данными (skills, lookingFor)."
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Profile by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/userprofile/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"userprofile",
+						"1"
+					]
+				},
+				"description": "Получает профиль пользователя по ID со всеми связанными данными."
+			},
+			"response": []
+		},
+		{
+			"name": "Update User Profile",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": 1,\n  \"name\": \"Elena Saf (Updated)\",\n  \"telegram\": \"dmitry_dev\",\n  \"linkedin\": \"https://www.linkedin.com/in/esaf20\",\n  \"bio\": \"QA Lead with department management experience, transformation coaching - UPDATED\",\n  \"skills\": [\n    \"коучинг\",\n    \"Soft Skills менторинг\",\n    \"QA менторинг\",\n    \"тестирование\",\n    \"Agile\"\n  ],\n  \"hasStartup\": false,\n  \"startupStage\": \"\",\n  \"startupDescription\": \"\",\n  \"startupName\": \"\",\n  \"lookingFor\": [\n    \"Единомышленников\",\n    \"Проектов\"\n  ],\n  \"canHelp\": \"- выявление и умение справляться с ограничениями\\n- Коучинг и менторинг\\n- QA процессы\",\n  \"needsHelp\": \"Поиск проектов и нетворкинг\",\n  \"aiUsage\": \"Активно использую AI инструменты\",\n  \"email\": \"elena@example.com\",\n  \"photo\": \"https://example.com/photos/elena.jpg\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/userprofile/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"userprofile",
+						"1"
+					]
+				},
+				"description": "Обновляет существующий профиль пользователя. Заменяет все связанные данные (skills, lookingFor)."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete User Profile",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/userprofile/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"userprofile",
+						"1"
+					]
+				},
+				"description": "Удаляет профиль пользователя и все связанные данные (cascade delete)."
+			},
+			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Проверка работоспособности API."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
+

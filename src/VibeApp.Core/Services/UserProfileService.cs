@@ -13,42 +13,83 @@ public class UserProfileService : IUserProfileService
     private readonly IRepository<UserProfile> _userProfileRepository;
     private readonly IRepository<UserSkill> _userSkillRepository;
     private readonly IRepository<UserLookingFor> _userLookingForRepository;
-    private readonly IRepository<UserCustomArray1> _customArray1Repository;
-    private readonly IRepository<UserCustomArray2> _customArray2Repository;
-    private readonly IRepository<UserCustomArray3> _customArray3Repository;
-    private readonly IRepository<UserCustomArray4> _customArray4Repository;
-    private readonly IRepository<UserCustomArray5> _customArray5Repository;
-    private readonly IRepository<UserCustomArray6> _customArray6Repository;
-    private readonly IRepository<UserCustomArray7> _customArray7Repository;
 
     public UserProfileService(
         IRepository<UserProfile> userProfileRepository,
         IRepository<UserSkill> userSkillRepository,
-        IRepository<UserLookingFor> userLookingForRepository,
-        IRepository<UserCustomArray1> customArray1Repository,
-        IRepository<UserCustomArray2> customArray2Repository,
-        IRepository<UserCustomArray3> customArray3Repository,
-        IRepository<UserCustomArray4> customArray4Repository,
-        IRepository<UserCustomArray5> customArray5Repository,
-        IRepository<UserCustomArray6> customArray6Repository,
-        IRepository<UserCustomArray7> customArray7Repository)
+        IRepository<UserLookingFor> userLookingForRepository)
     {
         _userProfileRepository = userProfileRepository;
         _userSkillRepository = userSkillRepository;
         _userLookingForRepository = userLookingForRepository;
-        _customArray1Repository = customArray1Repository;
-        _customArray2Repository = customArray2Repository;
-        _customArray3Repository = customArray3Repository;
-        _customArray4Repository = customArray4Repository;
-        _customArray5Repository = customArray5Repository;
-        _customArray6Repository = customArray6Repository;
-        _customArray7Repository = customArray7Repository;
     }
 
-    public async Task<UserProfile> ImportUserProfileAsync(UserProfileImportDto dto, CancellationToken cancellationToken = default)
+    public async Task<BatchImportResult> ImportUserProfilesAsync(List<UserProfileImportDto> dtos, CancellationToken cancellationToken = default)
+    {
+        var result = new BatchImportResult
+        {
+            TotalProcessed = dtos.Count
+        };
+
+        try
+        {
+            // Get all existing profiles
+            var existingProfiles = await _userProfileRepository.GetAllAsync();
+            var existingProfilesList = existingProfiles.ToList();
+            
+            // Get IDs from import list
+            var importIds = dtos.Select(d => d.Id).ToHashSet();
+            
+            // Find profiles to delete (exist in DB but not in import list)
+            var profilesToDelete = existingProfilesList.Where(p => !importIds.Contains(p.Id)).ToList();
+            
+            // Delete profiles not in import list
+            foreach (var profile in profilesToDelete)
+            {
+                await _userProfileRepository.DeleteAsync(profile);
+                result.Deleted++;
+            }
+            
+            // Process each profile in import list
+            foreach (var dto in dtos)
+            {
+                try
+                {
+                    var existingProfile = existingProfilesList.FirstOrDefault(p => p.Id == dto.Id);
+                    
+                    if (existingProfile != null)
+                    {
+                        // Update existing profile
+                        await UpdateExistingProfile(existingProfile, dto);
+                        result.Updated++;
+                    }
+                    else
+                    {
+                        // Create new profile
+                        await CreateNewProfile(dto);
+                        result.Created++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Error processing profile ID {dto.Id}: {ex.Message}");
+                }
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            result.Errors.Add($"General error: {ex.Message}");
+            return result;
+        }
+    }
+
+    private async Task CreateNewProfile(UserProfileImportDto dto)
     {
         var userProfile = new UserProfile
         {
+            Id = dto.Id,
             Name = dto.Name,
             Telegram = dto.Telegram,
             LinkedIn = dto.Linkedin,
@@ -62,108 +103,26 @@ public class UserProfileService : IUserProfileService
             CanHelp = dto.CanHelp,
             NeedsHelp = dto.NeedsHelp,
             AiUsage = dto.AiUsage,
-            Custom1 = dto.Custom_1,
-            Custom2 = dto.Custom_2,
-            Custom3 = dto.Custom_3,
-            Custom4 = dto.Custom_4,
-            Custom5 = dto.Custom_5,
-            Custom6 = dto.Custom_6,
-            Custom7 = dto.Custom_7,
             CreatedAt = DateTime.UtcNow
         };
 
         // Add skills
         foreach (var skill in dto.Skills)
         {
-            userProfile.Skills.Add(new UserSkill { Skill = skill });
+            userProfile.Skills.Add(new UserSkill { Skill = skill, UserProfileId = dto.Id });
         }
 
         // Add lookingFor items
         foreach (var lookingFor in dto.LookingFor)
         {
-            userProfile.LookingFor.Add(new UserLookingFor { LookingFor = lookingFor });
-        }
-
-        // Add custom arrays
-        foreach (var value in dto.Custom_array_1)
-        {
-            userProfile.CustomArray1.Add(new UserCustomArray1 { Value = value });
-        }
-        
-        foreach (var value in dto.Custom_array_2)
-        {
-            userProfile.CustomArray2.Add(new UserCustomArray2 { Value = value });
-        }
-        
-        foreach (var value in dto.Custom_array_3)
-        {
-            userProfile.CustomArray3.Add(new UserCustomArray3 { Value = value });
-        }
-        
-        foreach (var value in dto.Custom_array_4)
-        {
-            userProfile.CustomArray4.Add(new UserCustomArray4 { Value = value });
-        }
-        
-        foreach (var value in dto.Custom_array_5)
-        {
-            userProfile.CustomArray5.Add(new UserCustomArray5 { Value = value });
-        }
-        
-        foreach (var value in dto.Custom_array_6)
-        {
-            userProfile.CustomArray6.Add(new UserCustomArray6 { Value = value });
-        }
-        
-        foreach (var value in dto.Custom_array_7)
-        {
-            userProfile.CustomArray7.Add(new UserCustomArray7 { Value = value });
+            userProfile.LookingFor.Add(new UserLookingFor { LookingFor = lookingFor, UserProfileId = dto.Id });
         }
 
         await _userProfileRepository.AddAsync(userProfile);
-        return userProfile;
     }
 
-    public async Task<UserProfile?> GetUserProfileByIdAsync(int id, CancellationToken cancellationToken = default)
+    private async Task UpdateExistingProfile(UserProfile existingProfile, UserProfileImportDto dto)
     {
-        var profiles = await _userProfileRepository.GetAllAsync();
-        return profiles
-            .Include(p => p.Skills)
-            .Include(p => p.LookingFor)
-            .Include(p => p.CustomArray1)
-            .Include(p => p.CustomArray2)
-            .Include(p => p.CustomArray3)
-            .Include(p => p.CustomArray4)
-            .Include(p => p.CustomArray5)
-            .Include(p => p.CustomArray6)
-            .Include(p => p.CustomArray7)
-            .FirstOrDefault(p => p.Id == id);
-    }
-
-    public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync(CancellationToken cancellationToken = default)
-    {
-        var profiles = await _userProfileRepository.GetAllAsync();
-        return profiles
-            .Include(p => p.Skills)
-            .Include(p => p.LookingFor)
-            .Include(p => p.CustomArray1)
-            .Include(p => p.CustomArray2)
-            .Include(p => p.CustomArray3)
-            .Include(p => p.CustomArray4)
-            .Include(p => p.CustomArray5)
-            .Include(p => p.CustomArray6)
-            .Include(p => p.CustomArray7)
-            .ToList();
-    }
-
-    public async Task<UserProfile> UpdateUserProfileAsync(int id, UserProfileImportDto dto, CancellationToken cancellationToken = default)
-    {
-        var existingProfile = await GetUserProfileByIdAsync(id, cancellationToken);
-        if (existingProfile == null)
-        {
-            throw new KeyNotFoundException($"User profile with ID {id} not found");
-        }
-
         // Update basic properties
         existingProfile.Name = dto.Name;
         existingProfile.Telegram = dto.Telegram;
@@ -178,13 +137,6 @@ public class UserProfileService : IUserProfileService
         existingProfile.CanHelp = dto.CanHelp;
         existingProfile.NeedsHelp = dto.NeedsHelp;
         existingProfile.AiUsage = dto.AiUsage;
-        existingProfile.Custom1 = dto.Custom_1;
-        existingProfile.Custom2 = dto.Custom_2;
-        existingProfile.Custom3 = dto.Custom_3;
-        existingProfile.Custom4 = dto.Custom_4;
-        existingProfile.Custom5 = dto.Custom_5;
-        existingProfile.Custom6 = dto.Custom_6;
-        existingProfile.Custom7 = dto.Custom_7;
         existingProfile.UpdatedAt = DateTime.UtcNow;
 
         // Remove old skills and add new ones
@@ -195,7 +147,7 @@ public class UserProfileService : IUserProfileService
         existingProfile.Skills.Clear();
         foreach (var skill in dto.Skills)
         {
-            existingProfile.Skills.Add(new UserSkill { Skill = skill, UserProfileId = id });
+            existingProfile.Skills.Add(new UserSkill { Skill = skill, UserProfileId = existingProfile.Id });
         }
 
         // Remove old lookingFor and add new ones
@@ -206,19 +158,39 @@ public class UserProfileService : IUserProfileService
         existingProfile.LookingFor.Clear();
         foreach (var lookingFor in dto.LookingFor)
         {
-            existingProfile.LookingFor.Add(new UserLookingFor { LookingFor = lookingFor, UserProfileId = id });
+            existingProfile.LookingFor.Add(new UserLookingFor { LookingFor = lookingFor, UserProfileId = existingProfile.Id });
         }
 
-        // Update custom arrays
-        await UpdateCustomArray(existingProfile.CustomArray1, dto.Custom_array_1, id, _customArray1Repository);
-        await UpdateCustomArray(existingProfile.CustomArray2, dto.Custom_array_2, id, _customArray2Repository);
-        await UpdateCustomArray(existingProfile.CustomArray3, dto.Custom_array_3, id, _customArray3Repository);
-        await UpdateCustomArray(existingProfile.CustomArray4, dto.Custom_array_4, id, _customArray4Repository);
-        await UpdateCustomArray(existingProfile.CustomArray5, dto.Custom_array_5, id, _customArray5Repository);
-        await UpdateCustomArray(existingProfile.CustomArray6, dto.Custom_array_6, id, _customArray6Repository);
-        await UpdateCustomArray(existingProfile.CustomArray7, dto.Custom_array_7, id, _customArray7Repository);
-
         await _userProfileRepository.UpdateAsync(existingProfile);
+    }
+
+    public async Task<UserProfile?> GetUserProfileByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var profiles = await _userProfileRepository.GetAllAsync();
+        return profiles
+            .Include(p => p.Skills)
+            .Include(p => p.LookingFor)
+            .FirstOrDefault(p => p.Id == id);
+    }
+
+    public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync(CancellationToken cancellationToken = default)
+    {
+        var profiles = await _userProfileRepository.GetAllAsync();
+        return profiles
+            .Include(p => p.Skills)
+            .Include(p => p.LookingFor)
+            .ToList();
+    }
+
+    public async Task<UserProfile> UpdateUserProfileAsync(int id, UserProfileImportDto dto, CancellationToken cancellationToken = default)
+    {
+        var existingProfile = await GetUserProfileByIdAsync(id, cancellationToken);
+        if (existingProfile == null)
+        {
+            throw new KeyNotFoundException($"User profile with ID {id} not found");
+        }
+
+        await UpdateExistingProfile(existingProfile, dto);
         return existingProfile;
     }
 
@@ -233,40 +205,4 @@ public class UserProfileService : IUserProfileService
         await _userProfileRepository.DeleteAsync(profile);
         return true;
     }
-
-    private async Task UpdateCustomArray<T>(
-        ICollection<T> existingCollection, 
-        List<string> newValues, 
-        int userProfileId, 
-        IRepository<T> repository) where T : class, IEntity, new()
-    {
-        // Remove old items
-        foreach (var item in existingCollection.ToList())
-        {
-            await repository.DeleteAsync(item);
-        }
-        existingCollection.Clear();
-
-        // Add new items
-        foreach (var value in newValues)
-        {
-            var newItem = new T();
-            SetUserProfileId(newItem, userProfileId);
-            SetValue(newItem, value);
-            existingCollection.Add(newItem);
-        }
-    }
-
-    private void SetUserProfileId<T>(T entity, int userProfileId) where T : class, IEntity
-    {
-        var property = entity.GetType().GetProperty("UserProfileId");
-        property?.SetValue(entity, userProfileId);
-    }
-
-    private void SetValue<T>(T entity, string value) where T : class, IEntity
-    {
-        var property = entity.GetType().GetProperty("Value");
-        property?.SetValue(entity, value);
-    }
 }
-

@@ -18,20 +18,35 @@ public class UserProfileController : ControllerBase
     }
 
     /// <summary>
-    /// Import user profile from JSON
+    /// Import batch of user profiles from JSON and sync with database
+    /// Deletes users not present in the import list
     /// </summary>
     [HttpPost("import")]
-    public async Task<ActionResult<int>> ImportUserProfile([FromBody] UserProfileImportDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult> ImportUserProfiles([FromBody] List<UserProfileImportDto> dtos, CancellationToken cancellationToken)
     {
         try
         {
-            var userProfile = await _userProfileService.ImportUserProfileAsync(dto, cancellationToken);
-            return Ok(new { id = userProfile.Id, message = "User profile imported successfully" });
+            if (dtos == null || !dtos.Any())
+            {
+                return BadRequest(new { error = "No profiles provided for import" });
+            }
+
+            var result = await _userProfileService.ImportUserProfilesAsync(dtos, cancellationToken);
+            
+            return Ok(new 
+            { 
+                totalProcessed = result.TotalProcessed,
+                created = result.Created,
+                updated = result.Updated,
+                deleted = result.Deleted,
+                errors = result.Errors,
+                message = $"Successfully processed {result.TotalProcessed} profiles. Created: {result.Created}, Updated: {result.Updated}, Deleted: {result.Deleted}"
+            });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error importing user profile");
-            return StatusCode(500, new { error = "Failed to import user profile" });
+            _logger.LogError(ex, "Error importing user profiles");
+            return StatusCode(500, new { error = "Failed to import user profiles", details = ex.Message });
         }
     }
 
@@ -119,4 +134,3 @@ public class UserProfileController : ControllerBase
         }
     }
 }
-

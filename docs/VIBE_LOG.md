@@ -334,3 +334,66 @@ curl -X POST http://localhost:5000/api/userprofile/import \
 - Улучшена организация кода и читаемость
 - Каждый класс теперь в отдельном файле для лучшей поддержки
 
+### Prompt 10: Batch Import with Sync
+```
+в ImportUserProfile будет приходить список пользователей
+доработай это
+при этом нужно удалить всех пользователей в БД, которых не было в списке
+```
+
+### Actions Taken
+- Изменён метод ImportUserProfile для приёма списка пользователей
+- Реализована логика синхронизации: 
+  - Удаляются пользователи из БД, которых нет в новом списке
+  - Обновляются существующие пользователи
+  - Добавляются новые пользователи
+- Обновлён API endpoint для приёма массива JSON
+- Добавлен новый метод ImportUserProfilesAsync (batch import)
+- Контроллер теперь принимает List<UserProfileImportDto>
+
+### Prompt 11: Remove Custom Fields
+```
+давай удалим все custom поля из профиля, они пока не нужны
+нужно почистить модели, миграцию
+```
+
+### Actions Taken
+- Удалены все custom поля из UserProfile (Custom1-7, CustomArray1-7)
+- Удалены файлы сущностей UserCustomArray1-7.cs
+- Обновлён UserProfileImportDto - удалены custom поля
+- Обновлён UserProfileService - убрана работа с custom полями
+- Обновлён AppDbContext - убраны DbSet'ы и конфигурация
+- Создана миграция RemoveCustomFields для удаления таблиц из БД
+- Упрощена структура данных
+
+### Prompt 12: Create Postman Collection
+```
+создай postman коллекцию (чтобы можно было сделать import) для тестирования api UserProfileController
+положи ее в папку doc
+```
+
+### Actions Taken
+- Создана Postman коллекция `docs/VibeApp-UserProfile-API.postman_collection.json`
+- Добавлены все endpoints UserProfileController:
+  - POST /api/userprofile/import - импорт массива профилей
+  - GET /api/userprofile - получить все профили
+  - GET /api/userprofile/{id} - получить профиль по ID
+  - PUT /api/userprofile/{id} - обновить профиль
+  - DELETE /api/userprofile/{id} - удалить профиль
+- Добавлены примеры запросов с реальными данными
+- Настроены переменные для удобного тестирования
+
+### Prompt 13: Fix Circular Reference Error
+```
+На get {{base_url}}/api/userprofile/1
+получаю ошибку
+Consider using ReferenceHandler.Preserve on JsonSerializerOptions to support cycles. 
+Path: $.Skills.UserProfile.Skills.UserProfile.Skills...
+```
+
+### Actions Taken
+- Добавлена настройка JSON serialization для игнорирования циклических ссылок
+- Добавлен ReferenceHandler.IgnoreCycles в Program.cs
+- Проблема возникала из-за navigation properties: UserProfile → UserSkill → UserProfile
+- Теперь сериализация корректно обрабатывает циклические ссылки между сущностями
+

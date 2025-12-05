@@ -9,9 +9,10 @@ namespace VibeApp.Core.Interfaces;
 public interface IUserProfileService
 {
     /// <summary>
-    /// Import user profile from DTO and save to database
+    /// Import batch of user profiles from DTOs and sync with database
+    /// Deletes users not present in the import list
     /// </summary>
-    Task<UserProfile> ImportUserProfileAsync(UserProfileImportDto dto, CancellationToken cancellationToken = default);
+    Task<BatchImportResult> ImportUserProfilesAsync(List<UserProfileImportDto> dtos, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get user profile by ID

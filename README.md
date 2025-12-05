@@ -8,6 +8,7 @@
 - ✅ Профиль пользователя с возможностью изменения пароля
 - ✅ ASP.NET Core Identity для авторизации
 - ✅ **UserProfile API** - управление расширенными профилями пользователей
+- ✅ **Postman коллекция** для тестирования API
 - ✅ PostgreSQL для хранения данных
 - ✅ Современный UI на Bootstrap 5
 - ✅ Web API с Swagger
@@ -142,6 +143,29 @@ curl -X POST http://localhost:5000/api/userprofile/import \
 ```
 
 Или используйте Swagger UI: http://localhost:5000/swagger
+
+## Тестирование API
+
+### Вариант 1: Postman (Рекомендуется)
+
+1. Импортируйте коллекцию из `docs/VibeApp-UserProfile-API.postman_collection.json`
+2. Убедитесь, что переменная `base_url` = `http://localhost:5000`
+3. Запустите запросы из коллекции
+
+Подробная инструкция: `docs/POSTMAN_GUIDE.md`
+
+### Вариант 2: Swagger UI
+
+Откройте http://localhost:5000/swagger и тестируйте через веб-интерфейс.
+
+### Вариант 3: PowerShell/cURL
+
+```powershell
+# Импорт профилей
+$json = Get-Content -Raw sample-user-profiles-batch.json
+Invoke-RestMethod -Uri "http://localhost:5000/api/userprofile/import" `
+  -Method Post -Body $json -ContentType "application/json"
+```
 
 ## Архитектура
 
