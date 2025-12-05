@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: vibe-app-api
+    env: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vibe-app-db
+          property: connectionString
+    healthCheckPath: /health
+
+databases:
+  - name: vibe-app-db
+    databaseName: vibeapp
+    user: vibeapp
+    region: frankfurt
+    plan: free
+

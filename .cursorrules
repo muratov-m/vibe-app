@@ -1,0 +1,57 @@
+# Vibe Coding Competition - Cursor Rules
+
+## Project Overview
+Backend Web API project for Vibe Coding competition using ASP.NET Core 9.0 with PostgreSQL.
+
+## CRITICAL RULES
+
+### 1. Logging Requirement
+- **ALWAYS** log every user prompt and actions taken to `docs/VIBE_LOG.md`
+- Format: Date, prompt text, list of actions
+- Log BEFORE making changes
+
+### 2. Technology Stack
+- **Backend**: ASP.NET Core 9.0 Web API
+- **Database**: PostgreSQL via Npgsql.EntityFrameworkCore.PostgreSQL 9.0+
+- **Vector Extension**: pgvector (add only when RAG/embeddings needed)
+- **ORM**: Entity Framework Core 9.0
+- **Documentation**: Swagger/Swashbuckle
+
+### 3. Dual Environment Support
+Project must work in BOTH environments:
+
+#### Local Development
+- Connection string in `appsettings.Development.json`
+- PostgreSQL on localhost:5432
+- Swagger UI enabled
+
+#### Render.com Production
+- Use `DATABASE_URL` environment variable
+- Auto-apply migrations on startup
+- Health check endpoint at `/health`
+- Docker deployment
+- Parse Render PostgreSQL URL format: `postgres://user:pass@host:port/db`
+
+### 4. Connection String Handling
+- Support both local connection string and Render's `DATABASE_URL`
+- Convert `postgres://` format to Npgsql connection string format
+- Never hardcode sensitive data
+
+### 5. pgvector Integration (only when needed)
+- Add `Pgvector.EntityFrameworkCore` package
+- Enable vector extension in PostgreSQL
+- Use for RAG scenarios with embeddings
+
+### 6. Best Practices
+- Use async/await for database operations
+- Use dependency injection
+- Add proper error handling and logging
+- Use DTOs for API responses
+- Health check endpoint required
+- Docker support required
+
+## WORKFLOW
+1. Log user prompt to `docs/VIBE_LOG.md`
+2. Make requested changes
+3. Update log with actions taken
+4. Ensure works locally AND on Render.com
