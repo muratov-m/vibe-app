@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace VibeApp.Api.Migrations
+namespace VibeApp.Data.Migrations
 {
     /// <inheritdoc />
     public partial class InitialIdentity : Migration

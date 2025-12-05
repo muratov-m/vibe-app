@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using VibeApp.Api.Data;
+using VibeApp.Core.Extensions;
+using VibeApp.Data;
+using VibeApp.Data.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,21 +12,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure PostgreSQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("DATABASE_URL");
-
-if (!string.IsNullOrEmpty(connectionString))
-{
-    // Parse render.com DATABASE_URL format if needed
-    if (connectionString.StartsWith("postgresql://"))
-    {
-        connectionString = ConvertPostgresUrl(connectionString);
-    }
-    
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(connectionString));
-}
+// Add Data layer services (includes DbContext)
+builder.Services.AddDataServices(builder.Configuration);
 
 // Add Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => 
@@ -41,6 +30,9 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+// Add Core layer services (business logic)
+builder.Services.AddCoreServices();
 
 // Configure cookie settings
 builder.Services.ConfigureApplicationCookie(options =>
@@ -93,13 +85,4 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.Run();
-
-// Helper method to convert render.com PostgreSQL URL to connection string
-static string ConvertPostgresUrl(string postgresUrl)
-{
-    var uri = new Uri(postgresUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    
-    return $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
-}
 

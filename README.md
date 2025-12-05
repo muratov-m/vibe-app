@@ -7,6 +7,7 @@
 - ✅ Регистрация и вход пользователей
 - ✅ Профиль пользователя с возможностью изменения пароля
 - ✅ ASP.NET Core Identity для авторизации
+- ✅ **UserProfile API** - управление расширенными профилями пользователей
 - ✅ PostgreSQL для хранения данных
 - ✅ Современный UI на Bootstrap 5
 - ✅ Web API с Swagger
@@ -45,6 +46,15 @@ docker run --name postgres-vibe -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=vib
 cd src/VibeApp.Api
 dotnet restore
 dotnet ef database update  # Применить миграции Identity
+dotnet run
+```
+
+Или из корня с использованием solution:
+
+```bash
+dotnet restore
+dotnet build
+cd src/VibeApp.Api
 dotnet run
 ```
 
@@ -105,32 +115,61 @@ dotnet ef database update
 
 ## API Endpoints
 
+### Authentication & Pages
+- `/` - Главная страница
+- `/Account/Register` - Регистрация
+- `/Account/Login` - Вход
+- `/Account/Profile` - Профиль пользователя (требует авторизации)
+- `/Account/Logout` - Выход
+
+### User Profile API
+- `POST /api/userprofile/import` - Импорт профиля пользователя из JSON
+- `GET /api/userprofile` - Получить все профили
+- `GET /api/userprofile/{id}` - Получить профиль по ID
+- `PUT /api/userprofile/{id}` - Обновить профиль
+- `DELETE /api/userprofile/{id}` - Удалить профиль
+
+### Utility
 - `GET /api/weatherforecast` - Тестовый endpoint с прогнозом погоды
 - `GET /health` - Health check endpoint
 
-## Структура проекта
+### Пример импорта профиля
 
+```bash
+curl -X POST http://localhost:5000/api/userprofile/import \
+  -H "Content-Type: application/json" \
+  -d @sample-user-profile.json
 ```
-vibe-app/
-├── src/
-│   └── VibeApp.Api/          # Основной проект
-│       ├── Controllers/       # API контроллеры
-│       ├── Data/             # DbContext и модели данных
-│       ├── Pages/            # Razor Pages (UI)
-│       │   ├── Account/      # Страницы авторизации
-│       │   ├── Shared/       # Общие компоненты (Layout)
-│       │   └── Index.cshtml  # Главная страница
-│       ├── Migrations/       # EF Core миграции
-│       ├── Properties/       # Настройки запуска
-│       ├── wwwroot/          # Статические файлы
-│       ├── appsettings.json  # Конфигурация
-│       └── Program.cs        # Точка входа приложения
-├── docs/
-│   └── VIBE_LOG.md          # Лог разработки
-├── Dockerfile               # Docker конфигурация
-├── render.yaml              # Конфигурация для Render.com
-└── README.md               # Этот файл
-```
+
+Или используйте Swagger UI: http://localhost:5000/swagger
+
+## Архитектура
+
+Проект использует многослойную архитектуру (Layered Architecture):
+
+### 1. **VibeApp.Api** - Презентационный слой
+- Razor Pages для UI
+- API контроллеры для REST endpoints
+- Конфигурация middleware и DI
+- Зависит от: VibeApp.Core, VibeApp.Data
+
+### 2. **VibeApp.Core** - Слой бизнес-логики
+- Интерфейсы сервисов (`IUserService`, `IRepository<T>`)
+- Реализация бизнес-логики (`UserService`)
+- Независим от конкретных технологий (EF Core, ASP.NET)
+- Зависит от: Microsoft.AspNetCore.Identity.EntityFrameworkCore (для IdentityUser)
+
+### 3. **VibeApp.Data** - Слой доступа к данным
+- Entity Framework Core DbContext
+- Репозитории для работы с данными
+- Миграции базы данных
+- Зависит от: VibeApp.Core, PostgreSQL
+
+### Принципы
+- **Разделение ответственности**: каждый слой имеет свою задачу
+- **Dependency Inversion**: зависимости через интерфейсы
+- **Testability**: бизнес-логика изолирована и легко тестируется
+
 
 ## Разработка
 
@@ -142,9 +181,15 @@ vibe-app/
 
 ### Работа с базой данных
 
-1. Добавьте модели в `src/VibeApp.Api/Data/`
-2. Обновите `AppDbContext` для включения новых `DbSet<>`
-3. Создайте и примените миграцию
+1. Добавьте модели в `src/VibeApp.Core/Entities/`
+2. Обновите `AppDbContext` в `src/VibeApp.Data/` для включения новых `DbSet<>`
+3. Создайте и примените миграцию:
+
+```bash
+cd src/VibeApp.Api
+dotnet ef migrations add MigrationName --project ../VibeApp.Data
+dotnet ef database update
+```
 
 ### База данных Identity
 

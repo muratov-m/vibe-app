@@ -50,8 +50,15 @@ Project must work in BOTH environments:
 - Health check endpoint required
 - Docker support required
 
+### 7. Documentation Rules
+- **NEVER** create architecture documents (ARCHITECTURE.md, etc.) unless explicitly requested
+- **NEVER** create additional *.md files proactively
+- Only update existing documentation when making changes
+- Keep README.md concise and practical
+
 ## WORKFLOW
 1. Log user prompt to `docs/VIBE_LOG.md`
 2. Make requested changes
 3. Update log with actions taken
 4. Ensure works locally AND on Render.com
+5. Do NOT create documentation files unless explicitly asked
