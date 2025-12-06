@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace VibeApp.Api.Pages.Account;
 
+[IgnoreAntiforgeryToken]
 public class RegisterModel : PageModel
 {
     private readonly SignInManager<IdentityUser> _signInManager;

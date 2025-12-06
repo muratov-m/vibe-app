@@ -13,6 +13,9 @@ builder.Services.AddControllers()
     {
         // Handle circular references in JSON serialization
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        
+        // Allow NaN and Infinity in JSON (though we filter them out, this prevents crashes)
+        options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
     });
 builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
