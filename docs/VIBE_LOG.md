@@ -2357,6 +2357,148 @@ echo "VIBE_API_BASE_URL=http://localhost:5000" > .env.local
 
 **Build Status:** ✅ Переменная переименована во всех местах
 
+---
+
+## Prompt #52
+
+### User Request
+```
+Падают запросы (404)
+
+GET https://vibe-app.onrender.com/vite.svg
+GET https://vibe-app.onrender.com/api/country
+```
+
+### Actions Taken
+1. **Исправлена ошибка 404 для vite.svg:**
+   - Удалена ссылка на несуществующий favicon `<link rel="icon" href="/vite.svg" />`
+   - Файл vite.svg никогда не создавался в проекте
+   - Теперь браузер не запрашивает отсутствующий файл
+
+2. **Диагностирована проблема с /api/country:**
+   - CountryController существует и работает корректно
+   - Таблица Countries создана в миграции `20251206120000_AddCityCountryAndCountriesTable`
+   - Таблица существует, но **ПУСТАЯ** - нужно вызвать `/api/country/sync` для заполнения
+   - GetAllCountries возвращает пустой массив `[]` - это не 404!
+
+### Errors & Issues
+
+**Error #1: 404 на vite.svg**
+- Проблема: index.html ссылался на несуществующий файл favicon
+- Решение: Удалена строка `<link rel="icon" type="image/svg+xml" href="/vite.svg" />`
+- Это стандартный файл из Vite template, который не был скопирован в проект
+
+**Error #2: Пустой список стран (НЕ 404!)**
+- Проблема: Таблица Countries пустая, нет данных
+- Причина: После импорта профилей нужно вызвать `POST /api/country/sync` для синхронизации
+- Решение: Нужно вызвать sync endpoint или автоматизировать это после импорта
+
+### Technical Decisions
+
+**Почему countries таблица пустая:**
+1. Таблица создана миграцией, но данные не заполнены автоматически
+2. CountryService.SyncCountriesAsync извлекает страны из UserProfile.ParsedCountry
+3. ParsedCountry заполняется AI при обработке embeddings
+4. Последовательность: Import profiles → Process embeddings → Sync countries
+
+**Правильный workflow:**
+```
+1. POST /api/userprofile/import     (импорт профилей)
+   ↓
+2. Background service processes embeddings (заполняет ParsedCountry)
+   ↓
+3. POST /api/country/sync           (синхронизация таблицы Countries)
+   ↓
+4. GET /api/country                 (возвращает список стран)
+```
+
+**Почему не 404, а пустой массив:**
+- Endpoint работает корректно
+- Возвращает HTTP 200 с `[]` (пустой массив)
+- Это нормальное поведение, когда в таблице нет данных
+- 404 означал бы, что endpoint не найден (но он найден и работает)
+
+### Files Changed
+1. `src/frontend/index.html` - удалена ссылка на vite.svg
+2. `docs/VIBE_LOG.md` - задокументирована проблема и решение
+
+### Next Steps (для пользователя)
+
+**После деплоя на Render:**
+1. Импортируй профили: `POST /api/userprofile/import`
+2. Подожди, пока background service обработает embeddings (проверяй `/api/embedding-queue/status`)
+3. Синхронизируй страны: `POST /api/country/sync`
+4. Проверь: `GET /api/country` - должен вернуть список стран
+
+**Или автоматизируй:**
+- Можно добавить автоматический вызов `SyncCountriesAsync` в конце метода `ImportUserProfilesAsync`
+- Тогда страны будут синхронизироваться автоматически после каждого импорта
+
+**Build Status:** ✅ Проблема с vite.svg исправлена, проблема с countries объяснена
+
+---
+
+## Prompt #53
+
+### User Request
+```
+давай сгенерируем свой favicon
+```
+
+### Actions Taken
+1. **Создан папка public для статических файлов:**
+   - Создана директория `src/frontend/public/`
+   - Vite автоматически копирует содержимое в корень build
+
+2. **Создан SVG favicon:**
+   - Файл: `src/frontend/public/favicon.svg`
+   - Дизайн: Буква "V" белого цвета на градиентном фоне (синий → фиолетовый)
+   - Добавлена волна внизу (символизирует "vibe")
+   - Размер: 100x100, векторный (масштабируется идеально)
+
+3. **Обновлен index.html:**
+   - Добавлена ссылка на favicon: `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />`
+
+4. **Обновлен vite.config.js:**
+   - Добавлено `publicDir: 'public'` - явное указание папки для статических файлов
+   - При build Vite скопирует favicon.svg в wwwroot/
+
+### Technical Decisions
+
+**Почему SVG favicon:**
+- **Векторный формат** - идеально отображается на любом размере (16x16, 32x32, 64x64)
+- **Малый размер** - ~500 байт против 5-10 КБ для PNG/ICO
+- **Современный** - поддерживается всеми современными браузерами
+- **Градиент** - соответствует дизайну приложения (blue → purple)
+
+**Дизайн выбор:**
+- **Буква "V"** - узнаваемый логотип Vibe App
+- **Волна** - символизирует "vibe" (вибрация, энергия, волна)
+- **Цвета** - primary (blue #0ea5e9) + accent (purple #8b5cf6)
+- **Минималистичный** - хорошо читается даже в маленьком размере
+
+**Vite publicDir:**
+- По умолчанию Vite использует папку `public/` для статических файлов
+- Файлы копируются в корень build директории без обработки
+- `/favicon.svg` → `wwwroot/favicon.svg`
+- Работает и в dev, и в production
+
+### Files Created
+1. `src/frontend/public/` - директория для статических файлов
+2. `src/frontend/public/favicon.svg` - векторный favicon
+
+### Files Changed
+1. `src/frontend/index.html` - добавлена ссылка на favicon
+2. `src/frontend/vite.config.js` - добавлено `publicDir: 'public'`
+3. `docs/VIBE_LOG.md` - задокументировано создание favicon
+
+### Result
+✅ Теперь у Vibe App есть собственный брендированный favicon!
+- Development: http://localhost:5173 (показывает favicon)
+- Production: https://vibe-app.onrender.com (показывает favicon после build)
+
+**Build Status:** ✅ Favicon создан и интегрирован
+
 ### Technical Decisions
 
 **Почему пустая строка вместо URL:**

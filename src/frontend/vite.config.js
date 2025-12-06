@@ -15,6 +15,7 @@ export default defineConfig({
   build: {
     outDir: '../VibeApp.Api/wwwroot',
     emptyOutDir: true
-  }
+  },
+  publicDir: 'public'
 })
 
