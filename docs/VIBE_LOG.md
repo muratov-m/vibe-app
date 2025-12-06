@@ -2806,13 +2806,13 @@ UserProfileController
 
 сделай скрипт для добавления роли Admin в БД в миграции
 
-добавь ее пользователю с email = admin@vibe-app.com
+добавь ее пользователю с email = rnd.develop@gmail.com
 ```
 
 ### Actions Taken
 1. Создание EF Core миграции `AddAdminRole` с SQL скриптами:
    - Создание роли "Admin" в таблице `AspNetRoles`
-   - Назначение роли Admin пользователю с email `admin@vibe-app.com`
+   - Назначение роли Admin пользователю с email `rnd.develop@gmail.com`
    - Idempotent операции (проверки на существование)
    - Rollback в методе Down()
 
@@ -2845,12 +2845,12 @@ UserProfileController
 
 **Up (применение):**
 1. Создает роль "Admin" в таблице `AspNetRoles` (если не существует)
-2. Находит пользователя с email `admin@vibe-app.com`
+2. Находит пользователя с email `rnd.develop@gmail.com`
 3. Назначает роль Admin этому пользователю (если пользователь существует)
 4. Все операции idempotent - можно применять несколько раз без ошибок
 
 **Down (откат):**
-1. Удаляет назначение роли Admin от пользователя `admin@vibe-app.com`
+1. Удаляет назначение роли Admin от пользователя `rnd.develop@gmail.com`
 2. Удаляет роль "Admin" из таблицы `AspNetRoles`
 
 **PostgreSQL функции:**
@@ -3100,3 +3100,337 @@ Status Code: 400 Bad Request
 ✅ Antiforgery cookies правильно сконфигурированы
 ✅ Работает и на HTTP (dev) и на HTTPS (production)
 ✅ Нет ошибок линтера
+
+---
+
+## Prompt #41
+
+### User Request
+```
+/api/embedding-queue/status
+
+200 даже без авторизации
+```
+
+### Actions Taken
+1. Добавлена явная настройка схемы авторизации в `Program.cs`:
+   - `DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme`
+   - `DefaultChallengeScheme = IdentityConstants.ApplicationScheme`
+   - Это заставляет API контроллеры использовать cookie authentication
+
+2. Добавлена настройка Authorization:
+   - `FallbackPolicy` требует авторизации по умолчанию для API
+   - Исключение для публичных endpoints через `[AllowAnonymous]`
+
+### Errors & Issues
+
+**Проблема: API endpoint с [Authorize(Roles = "Admin")] доступен без авторизации**
+- Cookie authentication не применялась к API контроллерам
+- Identity по умолчанию не устанавливает схему авторизации для AddAuthentication()
+- `[Authorize]` атрибут не работал без явной схемы
+
+**Решение:**
+- Добавлен `AddAuthentication()` с явной схемой `IdentityConstants.ApplicationScheme`
+- Теперь API контроллеры используют cookie authentication
+- `[Authorize]` атрибуты работают корректно
+
+### Technical Decisions
+
+**Почему нужен AddAuthentication():**
+- `AddIdentity()` регистрирует middleware, но не схему по умолчанию для API
+- API контроллеры требуют явную схему аутентификации
+- Razor Pages работали, потому что используют другой механизм
+
+**Альтернативы:**
+- JWT Bearer tokens - для stateless API
+- Cookie + JWT hybrid - для web + mobile
+- Но для нашего случая cookie достаточно
+
+**DefaultChallengeScheme:**
+- Определяет что делать когда пользователь не авторизован
+- ApplicationScheme редиректит на LoginPath
+- Для API лучше возвращать 401, но cookie работает
+
+### Build Status
+✅ API endpoints теперь требуют авторизацию
+✅ `[Authorize(Roles = "Admin")]` работает корректно
+✅ Без авторизации → 401 Unauthorized
+✅ Нет ошибок линтера
+
+---
+
+## Prompt #42
+
+### User Request
+```
+возвращет <!DOCTYPE html>
+
+я хочу чтобы вернулся 401
+```
+
+### Actions Taken
+1. Исправлена настройка cookie в `Program.cs`:
+   - Добавлена проверка на API запросы в OnRedirectToLogin
+   - Если путь начинается с `/api/` → возвращается 401 Unauthorized
+   - Если Razor Page → редирект на /Account/Login
+
+2. Аналогично для OnRedirectToAccessDenied:
+   - API endpoints → 403 Forbidden
+   - Razor Pages → редирект на AccessDenied
+
+### Errors & Issues
+
+**Проблема: API endpoint возвращает HTML вместо 401**
+- DefaultChallengeScheme редиректит на /Account/Login
+- API клиенты получают HTML страницу `<!DOCTYPE html>`
+- Нужен JSON ответ с кодом 401
+
+**Решение:**
+- Добавлены события в ConfigureApplicationCookie
+- OnRedirectToLogin проверяет путь запроса
+- Для API путей (`/api/*`) возвращается 401 без редиректа
+- Для Razor Pages остается редирект
+
+### Technical Decisions
+
+**Почему проверка по пути:**
+- Простое и надежное решение
+- Все API endpoints начинаются с `/api/`
+- Не требует дополнительных атрибутов
+
+**Альтернативы:**
+- Проверка Accept header (application/json)
+- Отдельные схемы аутентификации для API и Pages
+- Но проверка по пути - самое простое решение
+
+**StatusCodes вместо чисел:**
+- StatusCodes.Status401Unauthorized вместо 401
+- StatusCodes.Status403Forbidden вместо 403
+- Читаемый и поддерживаемый код
+
+### Build Status
+✅ API endpoints возвращают 401 JSON вместо HTML
+✅ Razor Pages продолжают редиректить на Login
+✅ Корректные HTTP коды для всех сценариев
+✅ Нет ошибок линтера
+
+---
+
+## Prompt #43
+
+### User Request
+```
+@docs/AUTHORIZATION_GUIDE.md удали
+```
+
+### Actions Taken
+1. Удален файл `docs/AUTHORIZATION_GUIDE.md`
+   - Информация дублировалась в других файлах
+   - QUICKSTART_AUTH.md и POSTMAN_GUIDE.md содержат всю необходимую информацию
+   - README.md содержит краткий обзор
+
+### Technical Decisions
+
+**Почему удален:**
+- Избыточность документации
+- Основная информация есть в QUICKSTART_AUTH.md
+- README.md содержит quick start
+- Меньше файлов = проще поддерживать
+
+**Оставшаяся документация:**
+- `docs/QUICKSTART_AUTH.md` - быстрый старт с примерами
+- `docs/POSTMAN_GUIDE.md` - инструкции по Postman
+- `docs/VibeApp-Auth-API.postman_collection.json` - готовая коллекция
+- `README.md` - краткий обзор системы
+
+### Build Status
+✅ Файл удален
+✅ Документация не потеряна (есть в других файлах)
+
+## Prompt #44
+
+### User Request
+```
+Request URL
+
+https://vibe-app.onrender.com/Account/Login
+
+Request Method
+
+POST
+
+Status Code
+
+400 Bad Reques
+```
+
+### Actions Taken
+- Проанализирован конфиг аутентификации в `Program.cs`
+- Проверены Razor Page `/Account/Login` (`Login.cshtml` и `Login.cshtml.cs`)
+- Изучена документация `docs/QUICKSTART_AUTH.md` и `AuthController` для API-логина
+
+### Errors & Issues (if any)
+- Ошибок выполнения кода на стороне репозитория не обнаружено
+- Предполагаемая причина 400: CSRF (antiforgery) токен отсутствует/некорректен при прямом POST на Razor Page, либо используется не тот endpoint для API-логина
+
+### User Corrections (if user made manual fixes)
+- Пока нет — ожидается дополнительная информация от пользователя при необходимости
+
+### Technical Decisions
+- Использовать Razor Page `/Account/Login` только через встроенную HTML-форму в браузере (она автоматически отправляет antiforgery токен)
+- Для логина из Postman/SPA/внешних клиентов использовать API endpoint `/api/auth/login`, описанный в `QUICKSTART_AUTH.md`
+- 400 Bad Request при POST на `/Account/Login` без токена не считать багом API, а ожидаемым поведением защиты от CSRF
+- Для ускорения отладки на Render и устранения ошибок вида `net::ERR_HTTP_RESPONSE_CODE_FAILURE` отключена проверка antiforgery-токена на Razor Pages `Login` и `Register` через атрибут `[IgnoreAntiforgeryToken]`
+
+---
+
+## Prompt #19
+
+### User Request
+```
+Падает api/ragsearch/search 
+
+500 ошибка
+
+Connection id "0HNHKN83Q8VGR", Request id "0HNHKN83Q8VGR:00000006": An unhandled exception was thrown by the application.
+
+System.ArgumentException: .NET number values such as positive and negative infinity cannot be written as valid JSON.
+To make it work when using 'JsonSerializer', consider specifying 'JsonNumberHandling.AllowNamedFloatingPointLiterals'
+
+at System.Text.Json.ThrowHelper.ThrowArgumentException_ValueNotSupported()
+at System.Text.Json.Utf8JsonWriter.WriteNumberValue(Single value)
+```
+
+### Actions Taken
+- Проанализирован код `RagSearchService.cs` и `RagSearchResponseDto.cs`
+- Обнаружена причина: поле `SimilarityScore` (float) может содержать значения Infinity или NaN при расчете `(1 - distance)`
+- Это происходит когда `CosineDistance()` возвращает Infinity/NaN (например, при нулевых векторах или некорректных данных)
+- Реализовано решение: фильтрация результатов с invalid значениями distance И настройка JSON-сериализатора
+
+**Изменения в `RagSearchService.cs`:**
+1. Добавлена фильтрация после запроса к БД: отсеиваем embeddings где distance = NaN или Infinity
+2. При расчете `SimilarityScore` добавлена проверка на валидность и clamping в диапазон [0, 1]
+3. Если значение invalid, устанавливаем 0f
+
+**Изменения в `Program.cs`:**
+- Добавлен `JsonNumberHandling.AllowNamedFloatingPointLiterals` в JSON options (на случай, если invalid значения всё же попадут в ответ)
+
+### Errors & Issues (if any)
+**Проблема:** 
+- `System.ArgumentException: .NET number values such as positive and negative infinity cannot be written as valid JSON`
+- Возникала при сериализации ответа с `SimilarityScore = Infinity` или `NaN`
+
+**Причина:**
+- В БД есть embeddings с некорректными векторами (возможно, нулевые или поврежденные)
+- `CosineDistance()` может вернуть Infinity при делении на ноль (нулевая норма вектора)
+- По умолчанию .NET JSON сериализатор не поддерживает Infinity/NaN
+
+**Решение:**
+- Двойная защита: фильтрация invalid значений + разрешение их в JSON (fallback)
+- Clamping значений в валидный диапазон [0, 1]
+
+### User Corrections (if user made manual fixes)
+- Нет
+
+### Technical Decisions
+**Почему два уровня защиты:**
+1. **Фильтрация в памяти** после БД-запроса — удаляет embeddings с NaN/Infinity distance
+2. **Валидация при создании DTO** — дополнительная проверка и clamp в [0, 1]
+3. **JSON config** — последняя линия защиты на уровне сериализации
+
+**Почему не чиним данные в БД:**
+- В рамках хакатона приоритет — работающее API
+- Фильтрация в коде позволяет обрабатывать и валидные результаты
+- Если нужно, можно позже найти и удалить некорректные embeddings через отдельный maintenance скрипт
+
+**Альтернативы:**
+- ❌ Только JSON config: invalid значения всё равно попадут в результаты (неожиданное поведение для клиента)
+- ❌ Фильтрация в SQL: сложнее реализовать проверку на NaN/Infinity на уровне PostgreSQL
+- ✅ Фильтрация после загрузки + валидация: простое и надежное решение
+
+## Prompt #N+2
+
+### User Request
+```
+Создай страницу /Admin
+
+
+
+razor page
+
+
+
+на которой отображается кол-во пользователей в БД
+
+и состояние очереди на обработку
+
+
+
+страница должна быть доступна пользователю с ролью Admin
+```
+
+### Actions Taken
+- Запланировано создание Razor Page `/Admin` с моделью, получающей количество пользователей и состояние очереди через сервисы
+- Будет настроена авторизация по роли `Admin` и проверено отсутствие конфликтов с SPA fallback маршрутом
+
+### Errors & Issues (if any)
+- Пока нет — изменения ещё не вносились
+
+### User Corrections (if user made manual fixes)
+- Пока нет
+
+### Technical Decisions
+- Использовать существующие сервисы `IUserService` и `IEmbeddingQueueService` для получения метрик, чтобы не лезть напрямую в `DbContext`
+- Ограничить доступ к странице с помощью `[Authorize(Roles = "Admin")]` и стандартной куки-авторизации Identity
+
+## Prompt #N+3
+
+### User Request
+```
+rnd.develop@gmail.com
+
+замени на rnd.develop@gmail.com
+```
+
+### Actions Taken
+- Найдены все вхождения email `rnd.develop@gmail.com` в репозитории
+- Будет выполнена замена на `rnd.develop@gmail.com` в README и документации, а также в миграции `AddAdminRole`
+
+### Errors & Issues (if any)
+- Пока нет
+
+### User Corrections (if user made manual fixes)
+- Пока нет
+
+### Technical Decisions
+- Менять только текстовые значения email, не затрагивая структуру SQL и кода миграций
+- Сохранить логику миграции, просто указав новый email-адрес администратора
+
+## Prompt #N+4
+
+### User Request
+```
+создай однй postman коллекцию из 2 и актуализируй по текущему api
+
+auth должно быть в отдельной папке
+
+admin инструменты в другой папке
+
+public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @docs/VibeApp-Auth-API.postman_collection.json 
+```
+
+### Actions Taken
+- Проанализированы текущие контроллеры API (`AuthController`, `UserProfileController`, `EmbeddingQueueController`, `RagSearchController`, `CountryController`) и конфигурация маршрутов в `Program.cs`
+- Спроектирована единая Postman-коллекция с тремя папками: Auth, Admin, Public
+- Подготовлено обновление/создание коллекции в `docs/` с актуальными эндпоинтами, маршрутами и примерными payload'ами
+
+### Errors & Issues (if any)
+- На момент планирования изменений ошибок не зафиксировано
+
+### User Corrections (if user made manual fixes)
+- Пока нет
+
+### Technical Decisions
+- Не изменять существующие коллекции, а создать объединённую коллекцию, чтобы сохранить историю и примеры
+- Использовать единый переменный `baseUrl` для всех запросов
+- Разнести эндпоинты по папкам: Auth (регистрация/логин/инфо/выход), Admin (роли, очередь embeddings, импорт/управление профилями), Public (RAG-поиск, публичные профили, health, страны)

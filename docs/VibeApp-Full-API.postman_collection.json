@@ -1,0 +1,396 @@
+{
+  "info": {
+    "_postman_id": "vibe-app-full-api",
+    "name": "VibeApp - Full API",
+    "description": "Объединённая коллекция для VibeApp: аутентификация, админ-инструменты и публичные эндпоинты (RAG поиск, профили, здоровье сервиса).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@vibeapp.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin123",
+      "type": "string"
+    },
+    {
+      "key": "userEmail",
+      "value": "user@vibeapp.com",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "User123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Setup - Initialize Admin (DEV only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/init-admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "init-admin"]
+            },
+            "description": "Initialize first admin user. **Доступно только в Development среде**."
+          }
+        },
+        {
+          "name": "2. Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new regular user."
+          }
+        },
+        {
+          "name": "3. Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with email/password. Возвращает email и список ролей пользователя. Использует cookie-аутентификацию (Identity)."
+          }
+        },
+        {
+          "name": "4. Get Current User Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Get current authenticated user info (id, email, roles)."
+          }
+        },
+        {
+          "name": "5. Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout current user (cookie sign-out)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "1. Admin - Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"role\": \"Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/assign-role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "assign-role"]
+            },
+            "description": "Assign role to user. **Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "2. Admin - Remove Role from User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"role\": \"Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/remove-role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "remove-role"]
+            },
+            "description": "Remove role from user. **Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "3. Admin - Get Embedding Queue Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/embedding-queue/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "embedding-queue", "status"]
+            },
+            "description": "Get embedding queue status (profilesInQueue, timestamp). **Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "4. Admin - Clear Embedding Queue",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/embedding-queue/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "embedding-queue", "clear"]
+            },
+            "description": "Clear embedding queue (remove all items). **Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "5. Admin - Import User Profiles (Batch)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id\": 1,\n    \"name\": \"Elena Saf\",\n    \"telegram\": \"dmitry_dev\",\n    \"linkedin\": \"https://www.linkedin.com/in/esaf20\",\n    \"bio\": \"QA Lead with department management experience, transformation coaching\",\n    \"skills\": [\n      \"коучинг\",\n      \"Soft Skills менторинг\",\n      \"QA менторинг\",\n      \"тестирование\"\n    ],\n    \"hasStartup\": false,\n    \"startupStage\": \"\",\n    \"startupDescription\": \"\",\n    \"startupName\": \"\",\n    \"lookingFor\": [\n      \"Единомышленников\"\n    ],\n    \"canHelp\": \"- выявление и умение справляться с ограничениями, установками, страхами мешающих росту и движению к цели\\n- Как оппонент для брейнсторма идей или затыков\\n- QA и процессный менторинг\",\n    \"needsHelp\": \"Сейчас в поиске проектов для себя как QA Lead + AI для жизни как информирование + несомненно нетворкинг\",\n    \"aiUsage\": \"\",\n    \"email\": \"\",\n    \"photo\": \"\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/userprofile/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "userprofile", "import"]
+            },
+            "description": "Импортирует массив профилей пользователей (`UserProfileImportDto`) и синхронизирует с БД. **Удаляет пользователей, которых нет в списке. Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "6. Admin - Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"name\": \"Elena Saf (Updated)\",\n  \"telegram\": \"dmitry_dev\",\n  \"linkedin\": \"https://www.linkedin.com/in/esaf20\",\n  \"bio\": \"QA Lead with department management experience, transformation coaching - UPDATED\",\n  \"skills\": [\n    \"коучинг\",\n    \"Soft Skills менторинг\",\n    \"QA менторинг\",\n    \"тестирование\",\n    \"Agile\"\n  ],\n  \"hasStartup\": false,\n  \"startupStage\": \"\",\n  \"startupDescription\": \"\",\n  \"startupName\": \"\",\n  \"lookingFor\": [\n    \"Единомышленников\",\n    \"Проектов\"\n  ],\n  \"canHelp\": \"- выявление и умение справляться с ограничениями\\n- Коучинг и менторинг\\n- QA процессы\",\n  \"needsHelp\": \"Поиск проектов и нетворкинг\",\n  \"aiUsage\": \"Активно использую AI инструменты\",\n  \"email\": \"elena@example.com\",\n  \"photo\": \"https://example.com/photos/elena.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/userprofile/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "userprofile", "1"]
+            },
+            "description": "Обновляет существующий профиль пользователя через `UserProfileImportDto`. **Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "7. Admin - Delete User Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/userprofile/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "userprofile", "1"]
+            },
+            "description": "Удаляет профиль пользователя и связанные данные. **Требуется роль Admin.**"
+          }
+        },
+        {
+          "name": "8. Admin - Sync Countries",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/country/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "country", "sync"]
+            },
+            "description": "Синхронизация списка стран на основе используемых в профилях. По коду не ограничено ролями, но логически админ-инструмент."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "1. RAG Search (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Who here knows Rust and likes hiking?\",\n  \"topK\": 5,\n  \"generateResponse\": true,\n  \"minSimilarity\": 0.3,\n  \"filters\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ragsearch/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ragsearch", "search"]
+            },
+            "description": "RAG-поиск по профилям пользователей с использованием `RagSearchRequestDto`.\n\nПараметры:\n- `query` (string) — обязательный\n- `topK` (int 1-50, по умолчанию 5)\n- `generateResponse` (bool, по умолчанию true)\n- `minSimilarity` (float 0-1, по умолчанию 0.3)\n- `filters` (опционально, структурированные фильтры)"
+          }
+        },
+        {
+          "name": "2. RAG Search (GET - Quick)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ragsearch/search?q=Who can help with machine learning?&top=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ragsearch", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Who can help with machine learning?"
+                },
+                {
+                  "key": "top",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Быстрый RAG поиск через GET. Параметры: `q` (обязательный), `top` (1-50, по умолчанию 5)."
+          }
+        },
+        {
+          "name": "3. Get All User Profiles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/userprofile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "userprofile"]
+            },
+            "description": "Получает все профили пользователей со всеми связанными данными. Публичный GET-эндпоинт."
+          }
+        },
+        {
+          "name": "4. Get User Profile by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/userprofile/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "userprofile", "1"]
+            },
+            "description": "Получает профиль пользователя по ID. Публичный GET-эндпоинт."
+          }
+        },
+        {
+          "name": "5. Get All Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/country",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "country"]
+            },
+            "description": "Получение списка всех стран из справочника."
+          }
+        },
+        {
+          "name": "6. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Проверка работоспособности API (health check)."
+          }
+        },
+        {
+          "name": "7. Test Unauthorized Access to Admin Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/embedding-queue/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "embedding-queue", "status"]
+            },
+            "description": "Проверка, что без аутентификации доступ к admin-эндпоинту возвращает 401/403."
+          }
+        }
+      ]
+    }
+  ]
+}
+
+

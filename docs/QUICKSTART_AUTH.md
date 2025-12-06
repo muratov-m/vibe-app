@@ -32,9 +32,9 @@
 
 **Вариант 1: Через веб-интерфейс + Миграция (Рекомендуется)**
 
-1. Зарегистрируйте пользователя с email `admin@vibe-app.com`:
+1. Зарегистрируйте пользователя с email `rnd.develop@gmail.com`:
    - Откройте http://localhost:5000/Account/Register
-   - Email: `admin@vibe-app.com`
+   - Email: `rnd.develop@gmail.com`
    - Password: `admin` (или любой пароль минимум 3 символа)
 
 2. Примените миграцию (роль Admin назначится автоматически):
@@ -45,7 +45,7 @@ dotnet ef database update
 
 Миграция `AddAdminRole` автоматически:
 - Создаст роль "Admin" если не существует
-- Найдет пользователя с email `admin@vibe-app.com`
+- Найдет пользователя с email `rnd.develop@gmail.com`
 - Назначит роль Admin этому пользователю
 
 **Вариант 2: Через API**
@@ -54,7 +54,7 @@ dotnet ef database update
 # 1. Зарегистрируйте пользователя
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@vibe-app.com","password":"admin"}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin"}'
 
 # 2. Примените миграцию
 cd src/VibeApp.Api
@@ -68,7 +68,7 @@ dotnet ef database update
 ```bash
 curl -X POST http://localhost:5000/api/auth/init-admin \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@vibe-app.com","password":"admin"}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin"}'
 ```
 
 ### 1. Запустите приложение
@@ -77,7 +77,7 @@ cd src/VibeApp.Api
 dotnet run
 ```
 
-### 2. Убедитесь что пользователь admin@vibe-app.com существует
+### 2. Убедитесь что пользователь rnd.develop@gmail.com существует
 См. раздел "Подготовка: Создание Admin пользователя" выше
 
 ### 3. Войдите в систему
@@ -85,7 +85,7 @@ dotnet run
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -c cookies.txt \
-  -d '{"email":"admin@vibe-app.com","password":"admin","rememberMe":false}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin","rememberMe":false}'
 ```
 
 **Ответ:**
@@ -93,7 +93,7 @@ curl -X POST http://localhost:5000/api/auth/login \
 {
   "message": "Login successful",
   "userId": "guid-here",
-  "email": "admin@vibe-app.com",
+  "email": "rnd.develop@gmail.com",
   "roles": ["Admin"]
 }
 ```

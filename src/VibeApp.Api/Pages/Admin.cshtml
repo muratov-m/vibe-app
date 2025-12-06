@@ -1,0 +1,40 @@
+@page
+@model VibeApp.Api.Pages.AdminModel
+@{
+    ViewData["Title"] = "Админ-панель";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto text-white">
+            <h1 class="mb-4">Админ-панель</h1>
+
+            <div class="card mb-4">
+                <div class="card-body text-dark">
+                    <h5 class="card-title">Пользователи</h5>
+                    <p class="card-text mb-1">
+                        <span class="text-muted">Общее количество пользователей:</span>
+                    </p>
+                    <p class="display-6 mb-0">
+                        @Model.TotalUsers
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body text-dark">
+                    <h5 class="card-title">Очередь обработки эмбеддингов</h5>
+                    <p class="card-text mb-1">
+                        @Model.QueueStatus
+                    </p>
+                    <p class="card-text mb-0">
+                        <span class="text-muted">Элементов в очереди сейчас:</span>
+                        <span class="fw-bold">@Model.QueueCount</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

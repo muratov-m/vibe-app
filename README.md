@@ -169,7 +169,7 @@ dotnet ef database update
 
 **Важно:** Для доступа к административным endpoints нужен пользователь с ролью Admin.
 
-**Шаг 1:** Зарегистрируйте пользователя с email `admin@vibe-app.com`:
+**Шаг 1:** Зарегистрируйте пользователя с email `rnd.develop@gmail.com`:
 - Через веб: http://localhost:5000/Account/Register
 - Или через API: `POST /api/auth/register`
 
@@ -179,7 +179,7 @@ cd src/VibeApp.Api
 dotnet ef database update
 ```
 
-Миграция `AddAdminRole` автоматически создаст роль Admin и назначит ее пользователю `admin@vibe-app.com`.
+Миграция `AddAdminRole` автоматически создаст роль Admin и назначит ее пользователю `rnd.develop@gmail.com`.
 
 **Альтернатива (Development only):** Используйте endpoint `/api/auth/init-admin`
 

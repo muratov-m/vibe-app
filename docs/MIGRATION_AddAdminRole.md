@@ -2,7 +2,7 @@
 
 ## Описание
 
-Миграция автоматически создает роль "Admin" и назначает ее пользователю с email `admin@vibe-app.com`.
+Миграция автоматически создает роль "Admin" и назначает ее пользователю с email `rnd.develop@gmail.com`.
 
 ## Файл миграции
 
@@ -17,7 +17,7 @@
    - Name: `Admin`
    - NormalizedName: `ADMIN`
 
-2. **Назначает роль пользователю** `admin@vibe-app.com` (если пользователь существует):
+2. **Назначает роль пользователю** `rnd.develop@gmail.com` (если пользователь существует):
    - Ищет пользователя в `AspNetUsers`
    - Находит роль Admin в `AspNetRoles`
    - Добавляет связь в `AspNetUserRoles`
@@ -36,12 +36,12 @@
 
 ### Локальная разработка
 
-**Шаг 1:** Создайте пользователя с email `admin@vibe-app.com`
+**Шаг 1:** Создайте пользователя с email `rnd.develop@gmail.com`
 
 Через веб-интерфейс:
 ```
 1. Откройте http://localhost:5000/Account/Register
-2. Email: admin@vibe-app.com
+2. Email: rnd.develop@gmail.com
 3. Password: admin (или любой пароль минимум 3 символа)
 ```
 
@@ -49,7 +49,7 @@
 ```bash
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@vibe-app.com","password":"admin"}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin"}'
 ```
 
 **Шаг 2:** Примените миграцию
@@ -64,7 +64,7 @@ dotnet ef database update
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -c cookies.txt \
-  -d '{"email":"admin@vibe-app.com","password":"admin"}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin"}'
 
 # Проверьте роли
 curl -X GET http://localhost:5000/api/auth/me -b cookies.txt
@@ -74,7 +74,7 @@ curl -X GET http://localhost:5000/api/auth/me -b cookies.txt
 ```json
 {
   "userId": "...",
-  "email": "admin@vibe-app.com",
+  "email": "rnd.develop@gmail.com",
   "roles": ["Admin"]
 }
 ```
@@ -95,17 +95,17 @@ if (!app.Environment.IsDevelopment())
 }
 ```
 
-**Важно:** Создайте пользователя `admin@vibe-app.com` ПЕРЕД деплоем или сразу после:
+**Важно:** Создайте пользователя `rnd.develop@gmail.com` ПЕРЕД деплоем или сразу после:
 
 1. Откройте `https://your-app.onrender.com/Account/Register`
-2. Зарегистрируйте `admin@vibe-app.com`
+2. Зарегистрируйте `rnd.develop@gmail.com`
 3. Перезапустите сервис на Render (миграция применится при старте)
 
 Или используйте API:
 ```bash
 curl -X POST https://your-app.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@vibe-app.com","password":"admin123"}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin123"}'
 ```
 
 Затем перезапустите сервис на Render Dashboard.
@@ -130,7 +130,7 @@ SELECT * FROM "AspNetRoles" WHERE "Name" = 'Admin';
 
 ### Проверить пользователя:
 ```sql
-SELECT * FROM "AspNetUsers" WHERE "Email" = 'admin@vibe-app.com';
+SELECT * FROM "AspNetUsers" WHERE "Email" = 'rnd.develop@gmail.com';
 ```
 
 ### Проверить назначение роли:
@@ -141,12 +141,12 @@ SELECT
 FROM "AspNetUsers" u
 JOIN "AspNetUserRoles" ur ON u."Id" = ur."UserId"
 JOIN "AspNetRoles" r ON ur."RoleId" = r."Id"
-WHERE u."Email" = 'admin@vibe-app.com';
+WHERE u."Email" = 'rnd.develop@gmail.com';
 ```
 
 ## Изменение email админа
 
-Если хотите использовать другой email вместо `admin@vibe-app.com`:
+Если хотите использовать другой email вместо `rnd.develop@gmail.com`:
 
 ### Вариант 1: Создайте новую миграцию
 
@@ -168,7 +168,7 @@ dotnet ef migrations remove
 curl -X POST http://localhost:5000/api/auth/login \
   -c cookies.txt \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@vibe-app.com","password":"admin"}'
+  -d '{"email":"rnd.develop@gmail.com","password":"admin"}'
 
 # Назначьте роль другому пользователю
 curl -X POST http://localhost:5000/api/auth/assign-role \
@@ -181,7 +181,7 @@ curl -X POST http://localhost:5000/api/auth/assign-role \
 
 ### Миграция не назначила роль
 
-**Причина:** Пользователь `admin@vibe-app.com` не существовал на момент применения миграции.
+**Причина:** Пользователь `rnd.develop@gmail.com` не существовал на момент применения миграции.
 
 **Решение:** 
 1. Создайте пользователя
@@ -198,7 +198,7 @@ dotnet ef database update --force
 
 ### Пользователь есть, но роль не назначена
 
-Проверьте email - должен быть точно `admin@vibe-app.com` (lowercase).
+Проверьте email - должен быть точно `rnd.develop@gmail.com` (lowercase).
 
 Или назначьте роль вручную через SQL:
 ```sql
@@ -207,7 +207,7 @@ SELECT
     u."Id",
     r."Id"
 FROM "AspNetUsers" u, "AspNetRoles" r
-WHERE u."Email" = 'admin@vibe-app.com'
+WHERE u."Email" = 'rnd.develop@gmail.com'
   AND r."Name" = 'Admin'
   AND NOT EXISTS (
     SELECT 1 FROM "AspNetUserRoles" ur
