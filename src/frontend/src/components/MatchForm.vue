@@ -1,7 +1,67 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Найти похожих пользователей</h2>
+    <!-- Creative Header -->
+    <div class="text-center mb-6">
+      <div class="flex items-center justify-center gap-3">
+        <span class="text-3xl">☕</span>
+        <h2 class="text-3xl font-bold bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 bg-clip-text text-transparent">
+          The "Coffee Break" Roulette
+        </h2>
+        <span class="text-3xl">☕</span>
+      </div>
+    </div>
     
+    <!-- Email Section at Top -->
+    <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+      <div class="flex gap-2 mb-3">
+        <div class="flex-1">
+          <input
+            v-model="email"
+            type="email"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Email для автозаполнения"
+          />
+        </div>
+        <button
+          type="button"
+          @click="loadProfileByEmail"
+          :disabled="loadingProfile || !email"
+          class="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+        >
+          <span v-if="loadingProfile">⏳</span>
+          <span v-else>🔄 Обновить</span>
+        </button>
+      </div>
+      
+      <!-- Or Random Button -->
+      <div class="text-center">
+        <span class="text-xs text-gray-500 mr-2">или</span>
+        <button
+          type="button"
+          @click="generateRandomRequest"
+          class="text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline"
+        >
+          🎲 Случайный запрос
+        </button>
+      </div>
+      
+      <!-- Error Message -->
+      <div v-if="emailError" class="mt-3 text-sm text-red-600 flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+        {{ emailError }}
+      </div>
+      
+      <!-- Success Message -->
+      <div v-if="emailSuccess" class="mt-3 text-sm text-green-600 flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        {{ emailSuccess }}
+      </div>
+    </div>
+
     <form @submit.prevent="handleMatch" class="space-y-4">
       <!-- Main Activity -->
       <div>
@@ -67,35 +127,29 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <!-- Random Request Button -->
-        <button
-          type="button"
-          @click="generateRandomRequest"
-          class="bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-        >
-          🎲 Случайный запрос
-        </button>
-
-        <!-- Submit Button -->
-        <button
-          type="submit"
-          :disabled="loading || !formData.mainActivity || !formData.interests"
-          class="bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <span v-if="loading">Поиск...</span>
-          <span v-else>🤝 Match!</span>
-        </button>
-      </div>
+      <!-- Submit Button - Full Width at Bottom -->
+      <button
+        type="submit"
+        :disabled="loading || !formData.mainActivity || !formData.interests"
+        class="w-full bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <span v-if="loading">⏳ Поиск...</span>
+        <span v-else>🤝 Match!</span>
+      </button>
     </form>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { userProfileService } from '../services/api'
 
 const emit = defineEmits(['match'])
+
+const email = ref('')
+const loadingProfile = ref(false)
+const emailError = ref('')
+const emailSuccess = ref('')
 
 const formData = ref({
   mainActivity: '',
@@ -105,6 +159,34 @@ const formData = ref({
 })
 
 const loading = ref(false)
+
+// Load profile by email
+const loadProfileByEmail = async () => {
+  if (!email.value) return
+  
+  loadingProfile.value = true
+  emailError.value = ''
+  emailSuccess.value = ''
+  
+  try {
+    const profile = await userProfileService.getByEmail(email.value)
+    
+    // Fill form with profile data
+    formData.value.mainActivity = profile.parsedMainActivity || ''
+    formData.value.interests = profile.parsedInterests || ''
+    formData.value.country = profile.parsedCountry || ''
+    formData.value.city = profile.parsedCity || ''
+    
+    emailSuccess.value = `Данные загружены для ${profile.name}`
+    setTimeout(() => {
+      emailSuccess.value = ''
+    }, 3000)
+  } catch (err) {
+    emailError.value = err.message || 'Не удалось загрузить профиль'
+  } finally {
+    loadingProfile.value = false
+  }
+}
 
 // Predefined sample profiles for random generation
 const sampleProfiles = [

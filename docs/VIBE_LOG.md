@@ -4373,3 +4373,63 @@ Maksim Muratov
 
 ---
 
+## Prompt #100
+
+### User Request
+```
+На форме  User Match нужны изменения
+
+Сверху можно указать email и кнопка Обновить
+
+Форма должна заполниться интересами пользователя по email
+
+либо сверх кнопка Случайный запрос, как сейчас реализация
+
+кнопка Match снизу во всю строку
+```
+
+### Actions Taken
+- Redesigned MatchForm.vue with new layout
+- Added email input field with "🔄 Обновить" button at the top in gray section
+- Implemented auto-fill functionality from user profile by email
+- Added "🎲 Случайный запрос" button as alternative option (inline link style)
+- Moved Match button to bottom with full-width styling (w-full)
+- Integrated userProfileService.getByEmail for profile lookup
+- Added success/error feedback messages for email loading
+- Rebuilt frontend successfully
+
+### Technical Decisions
+- Email section placed in separate gray box (bg-gray-50) for visual grouping
+- "Обновить" button positioned next to email input for compact layout
+- "Случайный запрос" styled as inline link with "или" separator
+- Auto-fill uses parsed fields: parsedMainActivity, parsedInterests, parsedCountry, parsedCity
+- Success message shows for 3 seconds after successful load
+- Match button now full width (removed 2-column grid layout)
+- Loading states with emoji indicators (⏳) for better UX
+
+---
+
+## Prompt #101
+
+### User Request
+```
+AiUsage сейчас выводится в карточке профиля?
+
+Добавь в ProfileCard и MyProfile
+```
+
+### Actions Taken
+- Added AiUsage field display to ProfileCard.vue (RAG Search tab)
+- Added AiUsage field display to MyProfile.vue (My Profile tab)
+- Positioned before contact links section in both components
+- Used robot emoji (🤖) for visual identification
+- Rebuilt frontend successfully
+
+### Technical Decisions
+- Label: "🤖 Использование AI" for clarity
+- Placed after "Needs Help" and before "Contact Links"
+- Same styling as other info fields (text-sm, gray text)
+- Conditional rendering - only shows if aiUsage has value
+
+---
+

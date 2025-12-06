@@ -154,6 +154,12 @@
           <p class="text-gray-700">{{ profile.needsHelp }}</p>
         </div>
 
+        <!-- AI Usage -->
+        <div v-if="profile.aiUsage">
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">🤖 Использование AI</h3>
+          <p class="text-gray-700">{{ profile.aiUsage }}</p>
+        </div>
+
         <!-- Contact Links -->
         <div class="border-t border-gray-200 pt-6 mt-6">
           <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Контакты</h3>

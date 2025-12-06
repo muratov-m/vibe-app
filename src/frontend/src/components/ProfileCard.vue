@@ -91,6 +91,12 @@
         <p class="text-gray-700">{{ profile.interests }}</p>
       </div>
 
+      <!-- AI Usage -->
+      <div v-if="profile.aiUsage" class="text-sm">
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">🤖 Использование AI</p>
+        <p class="text-gray-700">{{ profile.aiUsage }}</p>
+      </div>
+
       <!-- Contact Links -->
       <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
         <a
