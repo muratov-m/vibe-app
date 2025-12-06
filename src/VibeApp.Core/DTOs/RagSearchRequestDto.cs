@@ -21,11 +21,6 @@ public class RagSearchRequestDto
     public bool GenerateResponse { get; set; } = true;
 
     /// <summary>
-    /// Minimum similarity score threshold (0-1, default: 0.3)
-    /// </summary>
-    public float MinSimilarity { get; set; } = 0.3f;
-
-    /// <summary>
     /// Optional filters for hybrid search (semantic + structured)
     /// </summary>
     public UserSearchFilters? Filters { get; set; }

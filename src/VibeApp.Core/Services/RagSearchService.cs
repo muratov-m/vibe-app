@@ -41,9 +41,6 @@ public class RagSearchService : IRagSearchService
         if (request.TopK <= 0)
             throw new ArgumentException("TopK must be positive", nameof(request.TopK));
 
-        if (request.MinSimilarity < 0 || request.MinSimilarity > 1)
-            throw new ArgumentException("MinSimilarity must be between 0 and 1", nameof(request.MinSimilarity));
-
         _logger.LogInformation("RAG search started for query: {Query}", request.Query);
 
         // Step 1: Generate embedding for the query
@@ -81,21 +78,20 @@ public class RagSearchService : IRagSearchService
         }
 
         // Step 4: Search for similar profile IDs using cosine distance
-        // Apply similarity filter, sort by distance, and take TopK
+        // Sort by distance and take TopK (no minimum similarity threshold)
         var similarEmbeddings = await embeddingsQuery
             .Select(e => new
             {
                 e.UserProfileId,
                 Distance = e.Embedding.CosineDistance(queryVector)
             })
-            .Where(e => (1 - e.Distance) >= request.MinSimilarity)
             .OrderBy(e => e.Distance)
             .Take(request.TopK)
             .ToListAsync(cancellationToken);
 
         if (!similarEmbeddings.Any())
         {
-            _logger.LogInformation("No profiles found matching query with similarity >= {MinSimilarity}", request.MinSimilarity);
+            _logger.LogInformation("No profiles found matching query");
             return new RagSearchResponseDto
             {
                 Query = request.Query,
@@ -117,8 +113,8 @@ public class RagSearchService : IRagSearchService
             .Where(p => matchedProfileIds.Contains(p.Id))
             .ToListAsync(cancellationToken);
 
-        _logger.LogInformation("Found {Count} profiles matching query with similarity >= {MinSimilarity}",
-            similarEmbeddings.Count, request.MinSimilarity);
+        _logger.LogInformation("Found {Count} profiles matching query",
+            similarEmbeddings.Count);
 
         // Step 6: Map to response DTOs (preserving similarity score order)
         // Use Dictionary for O(1) lookup instead of .First() in loop
@@ -230,15 +226,25 @@ public class RagSearchService : IRagSearchService
 
         var systemPrompt = @"You are a helpful assistant for a networking community app. 
 Your job is to answer questions about community members based on their profile information.
-Be concise, friendly, and helpful. When mentioning people, include their Telegram handle if available.
-If the query asks for specific skills or interests, highlight the most relevant matches first.
-Always respond in the same language as the user's query.";
+
+IMPORTANT: Format your response as a structured list of people with brief descriptions.
+
+Format:
+- For each person, include: Name (with Telegram if available) → brief description of why they match → key skills/interests
+- Use bullet points or numbered list for clarity
+- Be concise but informative (2-3 sentences per person)
+- Always respond in the same language as the user's query
+- Focus on the most relevant matches first
+
+Example format:
+1. **John Doe (@johndoe)** — AI/ML эксперт с опытом в стартапах. Специализируется на deep learning и computer vision. Ищет со-основателей.
+2. **Jane Smith (@janesmith)** — Backend разработчик с 5+ лет опыта. Знает Rust, Go, Kubernetes. Может помочь с архитектурой систем.";
 
         var userPrompt = $@"User's question: {query}
 
 {contextBuilder}
 
-Based on the profiles above, answer the user's question. Mention the most relevant people and briefly explain why they match.";
+Based on the profiles above, provide a structured list of the most relevant people with brief descriptions of why they match the query.";
 
         var messages = new List<ChatMessage>
         {

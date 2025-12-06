@@ -85,11 +85,8 @@
                 </svg>
               </div>
               <div class="ml-4 flex-1">
-                <h3 class="text-sm font-semibold text-gray-900 mb-2">Резюме от AI</h3>
-                <div class="text-gray-700 leading-relaxed space-y-3">
-                  <p v-for="(paragraph, index) in formatAISummary(searchResults.answer)" :key="index">
-                    {{ paragraph }}
-                  </p>
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">🤖 Резюме от AI</h3>
+                <div class="text-gray-700 leading-relaxed prose prose-sm max-w-none" v-html="formatAISummaryHTML(searchResults.answer)">
                 </div>
               </div>
             </div>
@@ -304,6 +301,65 @@ const formatAISummary = (text) => {
   }
   
   return paragraphs
+}
+
+const formatAISummaryHTML = (text) => {
+  if (!text) return ''
+  
+  // Convert markdown-style formatting to HTML for better display
+  let html = text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Italic
+    .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>') // Telegram handles
+  
+  // Handle numbered lists (1. 2. 3.)
+  const numberedListRegex = /^\d+\.\s+(.+)$/gm
+  if (numberedListRegex.test(text)) {
+    const items = text.split(/\n(?=\d+\.\s)/).filter(item => item.trim())
+    html = '<ol class="list-decimal list-inside space-y-2 ml-2">'
+    items.forEach(item => {
+      const cleaned = item.replace(/^\d+\.\s+/, '').trim()
+      const formatted = cleaned
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>')
+      html += `<li class="ml-2">${formatted}</li>`
+    })
+    html += '</ol>'
+    return html
+  }
+  
+  // Handle bullet lists (- or •)
+  const bulletListRegex = /^[-•]\s+(.+)$/gm
+  if (bulletListRegex.test(text)) {
+    const items = text.split(/\n(?=[-•]\s)/).filter(item => item.trim())
+    html = '<ul class="list-disc list-inside space-y-2 ml-2">'
+    items.forEach(item => {
+      const cleaned = item.replace(/^[-•]\s+/, '').trim()
+      const formatted = cleaned
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>')
+      html += `<li class="ml-2">${formatted}</li>`
+    })
+    html += '</ul>'
+    return html
+  }
+  
+  // Otherwise, split into paragraphs
+  const paragraphs = text.split('\n\n').filter(p => p.trim())
+  if (paragraphs.length > 1) {
+    html = paragraphs.map(p => {
+      const formatted = p
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>')
+      return `<p class="mb-2">${formatted}</p>`
+    }).join('')
+    return html
+  }
+  
+  return html
 }
 </script>
 

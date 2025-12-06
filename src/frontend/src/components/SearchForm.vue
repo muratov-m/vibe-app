@@ -67,15 +67,27 @@
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option :value="3">3</option>
-            <option :value="5">5</option>
-            <option :value="10">10</option>
-            <option :value="20">20</option>
+            <option :value="6">6</option>
+            <option :value="15">15</option>
           </select>
         </div>
       </div>
 
-      <!-- Advanced Settings (Collapsible) -->
-      <div>
+      <!-- Generate Response Toggle -->
+      <div class="flex items-center bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <input
+          id="generateResponse"
+          v-model="formData.generateResponse"
+          type="checkbox"
+          class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+        />
+        <label for="generateResponse" class="ml-3 block text-sm font-medium text-gray-700">
+          🤖 Создать резюме от AI (структурированный список людей)
+        </label>
+      </div>
+
+      <!-- Advanced Settings (Collapsible) - Only filters now -->
+      <div v-if="false">
         <button
           type="button"
           @click="showAdvanced = !showAdvanced"
@@ -85,37 +97,7 @@
         </button>
         
         <div v-if="showAdvanced" class="mt-3 space-y-4">
-          <!-- Min Similarity -->
-          <div>
-            <label for="minSimilarity" class="block text-sm font-medium text-gray-700 mb-2">
-              Мин. совпадение: {{ formData.minSimilarity.toFixed(1) }}
-            </label>
-            <input
-              id="minSimilarity"
-              v-model.number="formData.minSimilarity"
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              class="w-full"
-            />
-            <p class="mt-1 text-xs text-gray-500">
-              Большее значение = более строгое совпадение
-            </p>
-          </div>
-
-          <!-- Generate Response -->
-          <div class="flex items-center">
-            <input
-              id="generateResponse"
-              v-model="formData.generateResponse"
-              type="checkbox"
-              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-            />
-            <label for="generateResponse" class="ml-2 block text-sm text-gray-700">
-              Создать резюме от AI
-            </label>
-          </div>
+          <!-- No advanced settings for now -->
         </div>
       </div>
 
@@ -142,9 +124,8 @@ const emit = defineEmits(['search'])
 
 const formData = ref({
   query: '',
-  topK: 5,
+  topK: 6,
   generateResponse: true,
-  minSimilarity: 0.3,
   filters: {
     country: '',
     hasStartup: null
@@ -170,7 +151,6 @@ const handleSearch = async () => {
       query: formData.value.query,
       topK: formData.value.topK,
       generateResponse: formData.value.generateResponse,
-      minSimilarity: formData.value.minSimilarity,
       filters: {}
     }
 

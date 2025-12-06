@@ -53,11 +53,6 @@ public class RagSearchController : ControllerBase
                 return BadRequest(new { error = "TopK must be between 1 and 50" });
             }
 
-            if (request.MinSimilarity < 0 || request.MinSimilarity > 1)
-            {
-                return BadRequest(new { error = "MinSimilarity must be between 0 and 1" });
-            }
-
             _logger.LogInformation("RAG search request: {Query}, TopK: {TopK}, GenerateResponse: {GenerateResponse}",
                 request.Query, request.TopK, request.GenerateResponse);
 
@@ -99,8 +94,7 @@ public class RagSearchController : ControllerBase
         {
             Query = q,
             TopK = Math.Clamp(top, 1, 50),
-            GenerateResponse = true,
-            MinSimilarity = 0.3f
+            GenerateResponse = true
         };
 
         return await Search(request, cancellationToken);
