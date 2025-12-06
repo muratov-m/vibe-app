@@ -77,12 +77,13 @@ public class EmbeddingProcessingService : BackgroundService
             _logger.LogInformation("Processing embedding for profile ID: {ProfileId} (Queue Item: {QueueItemId})", 
                 userProfileId, queueItemId);
 
+            // Generate embedding (includes parsing step inside)
             await embeddingService.GenerateAndSaveEmbeddingAsync(userProfileId, cancellationToken);
             
             // Only remove from queue after successful embedding generation
             await queueService.RemoveFromQueueAsync(queueItemId, cancellationToken);
             
-            _logger.LogInformation("Successfully generated embedding for profile ID: {ProfileId}", userProfileId);
+            _logger.LogInformation("Successfully completed processing for profile ID: {ProfileId}", userProfileId);
         }
         catch (Exception ex)
         {

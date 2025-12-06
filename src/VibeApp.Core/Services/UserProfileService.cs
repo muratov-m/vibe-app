@@ -126,8 +126,6 @@ public class UserProfileService : IUserProfileService
             Bio = dto.Bio,
             Email = dto.Email,
             Photo = dto.Photo,
-            City = dto.City,
-            Country = dto.Country,
             HasStartup = dto.HasStartup,
             StartupStage = dto.StartupStage,
             StartupDescription = dto.StartupDescription,
@@ -165,8 +163,6 @@ public class UserProfileService : IUserProfileService
         existingProfile.Bio = dto.Bio;
         existingProfile.Email = dto.Email;
         existingProfile.Photo = dto.Photo;
-        existingProfile.City = dto.City;
-        existingProfile.Country = dto.Country;
         existingProfile.HasStartup = dto.HasStartup;
         existingProfile.StartupStage = dto.StartupStage;
         existingProfile.StartupDescription = dto.StartupDescription;

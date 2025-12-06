@@ -20,10 +20,10 @@ public class CountryService : ICountryService
 
     public async Task SyncCountriesAsync(CancellationToken cancellationToken = default)
     {
-        // Get all distinct countries from user profiles
+        // Get all distinct countries from user profiles (using AI-parsed countries)
         var countries = await _userProfileRepository.GetQueryable()
-            .Where(p => !string.IsNullOrWhiteSpace(p.Country))
-            .GroupBy(p => p.Country)
+            .Where(p => !string.IsNullOrWhiteSpace(p.ParsedCountry))
+            .GroupBy(p => p.ParsedCountry)
             .Select(g => new { Name = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
 

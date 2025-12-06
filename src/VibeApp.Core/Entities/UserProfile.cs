@@ -13,10 +13,6 @@ public class UserProfile : IEntity
     public string Email { get; set; } = string.Empty;
     public string Photo { get; set; } = string.Empty;
     
-    // Location information
-    public string City { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
-    
     // Startup information
     public bool HasStartup { get; set; }
     public string StartupStage { get; set; } = string.Empty;
@@ -27,6 +23,13 @@ public class UserProfile : IEntity
     public string CanHelp { get; set; } = string.Empty;
     public string NeedsHelp { get; set; } = string.Empty;
     public string AiUsage { get; set; } = string.Empty;
+    
+    // Parsed structured data (extracted by AI)
+    public string ParsedShortBio { get; set; } = string.Empty;
+    public string ParsedMainActivity { get; set; } = string.Empty;
+    public string ParsedInterests { get; set; } = string.Empty;
+    public string ParsedCountry { get; set; } = string.Empty;
+    public string ParsedCity { get; set; } = string.Empty;
     
     // Navigation properties
     public ICollection<UserSkill> Skills { get; set; } = new List<UserSkill>();

@@ -34,10 +34,12 @@ public class AppDbContext : IdentityDbContext
             entity.Property(e => e.LinkedIn).HasMaxLength(500);
             entity.Property(e => e.Email).HasMaxLength(200);
             entity.Property(e => e.Photo).HasMaxLength(500);
-            entity.Property(e => e.City).HasMaxLength(100);
-            entity.Property(e => e.Country).HasMaxLength(100);
             entity.Property(e => e.StartupStage).HasMaxLength(100);
             entity.Property(e => e.StartupName).HasMaxLength(200);
+            entity.Property(e => e.ParsedShortBio).HasMaxLength(500);
+            entity.Property(e => e.ParsedMainActivity).HasMaxLength(200);
+            entity.Property(e => e.ParsedCountry).HasMaxLength(100);
+            entity.Property(e => e.ParsedCity).HasMaxLength(100);
             
             entity.HasMany(e => e.Skills)
                 .WithOne(s => s.UserProfile)

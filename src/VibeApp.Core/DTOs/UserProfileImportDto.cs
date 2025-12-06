@@ -21,7 +21,5 @@ public class UserProfileImportDto
     public string AiUsage { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Photo { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string Country { get; set; } = string.Empty;
 }
 

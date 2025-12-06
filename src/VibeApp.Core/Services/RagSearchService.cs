@@ -58,10 +58,10 @@ public class RagSearchService : IRagSearchService
         {
             var profileQuery = _userProfileRepository.GetQueryable();
 
-            // Apply Country filter
+            // Apply Country filter (using parsed country from AI)
             if (!string.IsNullOrWhiteSpace(request.Filters.Country))
             {
-                profileQuery = profileQuery.Where(p => p.Country == request.Filters.Country);
+                profileQuery = profileQuery.Where(p => p.ParsedCountry == request.Filters.Country);
             }
 
             // Apply HasStartup filter
@@ -137,8 +137,8 @@ public class RagSearchService : IRagSearchService
                 Telegram = p.Telegram,
                 LinkedIn = p.LinkedIn,
                 Email = p.Email,
-                City = p.City,
-                Country = p.Country,
+                City = p.ParsedCity,
+                Country = p.ParsedCountry,
                 HasStartup = p.HasStartup,
                 StartupName = p.HasStartup ? p.StartupName : null,
                 StartupStage = p.HasStartup ? p.StartupStage : null,
