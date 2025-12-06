@@ -63,7 +63,10 @@ public class MatchSummaryService : IMatchSummaryService
 ВАЖНО: Отвечай ТОЛЬКО валидным JSON массивом без дополнительных пояснений.
 Формат: [{""profileId"": 123, ""summary"": ""текст саммари"", ""starterMessage"": ""текст сообщения""}]";
 
-            var profilesInfo = new StringBuilder();
+            // Estimate capacity: ~200 chars per profile + header
+            var estimatedCapacity = 300 + (profilesToProcess.Count * 200);
+            var profilesInfo = new StringBuilder(estimatedCapacity);
+            
             profilesInfo.AppendLine($"Критерии поиска пользователя:");
             profilesInfo.AppendLine($"- Основная деятельность: {searchRequest.MainActivity}");
             profilesInfo.AppendLine($"- Интересы: {searchRequest.Interests}");
@@ -104,22 +107,7 @@ public class MatchSummaryService : IMatchSummaryService
                 cancellationToken: cancellationToken);
 
             // Parse JSON response
-            var jsonResponse = response.Trim();
-            
-            // Remove markdown code blocks if present
-            if (jsonResponse.StartsWith("```json"))
-            {
-                jsonResponse = jsonResponse.Substring(7);
-            }
-            if (jsonResponse.StartsWith("```"))
-            {
-                jsonResponse = jsonResponse.Substring(3);
-            }
-            if (jsonResponse.EndsWith("```"))
-            {
-                jsonResponse = jsonResponse.Substring(0, jsonResponse.Length - 3);
-            }
-            jsonResponse = jsonResponse.Trim();
+            var jsonResponse = CleanJsonResponse(response);
 
             var summaries = JsonSerializer.Deserialize<List<MatchProfileSummary>>(jsonResponse, new JsonSerializerOptions
             {
@@ -166,5 +154,31 @@ public class MatchSummaryService : IMatchSummaryService
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Safely removes markdown code block formatting from JSON response
+    /// </summary>
+    private string CleanJsonResponse(string response)
+    {
+        var cleaned = response.Trim();
+        
+        // Remove opening markdown code blocks
+        if (cleaned.StartsWith("```json", StringComparison.OrdinalIgnoreCase) && cleaned.Length > 7)
+        {
+            cleaned = cleaned.Substring(7);
+        }
+        else if (cleaned.StartsWith("```") && cleaned.Length > 3)
+        {
+            cleaned = cleaned.Substring(3);
+        }
+        
+        // Remove closing markdown code blocks
+        if (cleaned.EndsWith("```") && cleaned.Length > 3)
+        {
+            cleaned = cleaned.Substring(0, cleaned.Length - 3);
+        }
+        
+        return cleaned.Trim();
     }
 }

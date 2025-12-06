@@ -36,3 +36,4 @@ public class UserMatchingEmbedding : IEntity
     public UserProfile UserProfile { get; set; } = null!;
 }
 
+

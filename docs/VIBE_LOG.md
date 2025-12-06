@@ -1,5 +1,31 @@
 # Vibe Coding Competition - Development Log
 
+## Prompt #73
+
+### User Request
+```
+исправь
+
+Небезопасный парсинг JSON
+Дублирование логики очистки markdown
+StringBuilder можно оптимизировать
+```
+
+### Actions Taken
+- Fixed unsafe JSON parsing with length checks
+- Refactored markdown cleanup logic into separate method `CleanJsonResponse()`
+- Optimized StringBuilder with initial capacity
+
+## Prompt #72
+
+### User Request
+```
+Сделай ревью @src/VibeApp.Core/Services/MatchSummaryService.cs
+```
+
+### Actions Taken
+- Code review of MatchSummaryService.cs performed
+
 ## 🚨 Key Errors & Fixes (for jury review)
 
 | # | Error | Root Cause | Fix | Prompt |
