@@ -217,7 +217,6 @@ WHERE u."Email" = 'admin@vibe-app.com'
 
 ## Дополнительная информация
 
-- **Основная документация:** `docs/AUTHORIZATION_GUIDE.md`
 - **Быстрый старт:** `docs/QUICKSTART_AUTH.md`
 - **README:** `README.md` (раздел "Создание первого Admin пользователя")
 

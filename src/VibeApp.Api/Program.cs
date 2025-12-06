@@ -58,6 +58,14 @@ builder.Services.AddSwaggerGen(c =>
 // Add Data layer services (includes DbContext)
 builder.Services.AddDataServices(builder.Configuration);
 
+// Add Authentication scheme explicitly for API controllers
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
+});
+
 // Add Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => 
 {
@@ -89,6 +97,35 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Works on HTTP (dev) and HTTPS (prod)
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    
+    // Handle API requests differently - return 401 instead of redirect
+    options.Events.OnRedirectToLogin = context =>
+    {
+        // If this is an API request (starts with /api/), return 401 instead of redirecting
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+        
+        // For Razor Pages, do the default redirect
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+    
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        // If this is an API request, return 403 instead of redirecting
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+        
+        // For Razor Pages, do the default redirect
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
 
 // Add health checks

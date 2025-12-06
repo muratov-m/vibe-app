@@ -237,7 +237,6 @@ Cookie настройки автоматически:
 
 ## Дополнительная документация
 
-- **Полное руководство:** `docs/AUTHORIZATION_GUIDE.md`
 - **Postman коллекция:** `docs/VibeApp-Auth-API.postman_collection.json`
 - **Примеры User Profile API:** `docs/POSTMAN_GUIDE.md`
 - **OpenAI интеграция:** `docs/OPENAI_GATEWAY_EXAMPLE.md`

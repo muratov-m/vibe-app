@@ -183,7 +183,7 @@ dotnet ef database update
 
 **Альтернатива (Development only):** Используйте endpoint `/api/auth/init-admin`
 
-Подробнее: `docs/AUTHORIZATION_GUIDE.md`
+Подробнее: `docs/QUICKSTART_AUTH.md`
 
 ## Деплой на Render.com
 
@@ -214,7 +214,7 @@ Render автоматически соберёт Vue frontend и задепло�
 - `POST /api/auth/remove-role` - Удалить роль (требует роль Admin)
 - `POST /api/auth/init-admin` - Инициализация Admin пользователя (только Development)
 
-**Подробнее:** `docs/AUTHORIZATION_GUIDE.md` и `docs/VibeApp-Auth-API.postman_collection.json`
+**Подробнее:** `docs/QUICKSTART_AUTH.md` и `docs/VibeApp-Auth-API.postman_collection.json`
 
 ### Authentication & Pages
 - `/` - Главная страница
@@ -343,7 +343,7 @@ public class MyService
    - **Get Current User Info** - проверить авторизацию
    - Остальные запросы для тестирования защищенных endpoints
 
-Подробная инструкция: `docs/POSTMAN_GUIDE.md` и `docs/AUTHORIZATION_GUIDE.md`
+Подробная инструкция: `docs/POSTMAN_GUIDE.md` и `docs/QUICKSTART_AUTH.md`
 
 ### Автоматическая генерация Embeddings
 
@@ -439,7 +439,7 @@ dotnet ef database update
 - **Admin** - полный доступ к административным endpoints (управление профилями, очередью embeddings, назначение ролей)
 - **Публичный доступ** - чтение профилей и RAG search
 
-Подробнее: `docs/AUTHORIZATION_GUIDE.md`
+Подробнее: `docs/QUICKSTART_AUTH.md`
 
 ### Требования к паролю (упрощенные для demo/hackathon)
 - Минимальная длина: 3 символа
