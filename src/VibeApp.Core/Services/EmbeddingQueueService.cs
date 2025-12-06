@@ -33,7 +33,9 @@ public class EmbeddingQueueService : IEmbeddingQueueService
 
     public async Task<List<(int QueueItemId, int UserProfileId)>> DequeueBatchAsync(int batchSize, CancellationToken cancellationToken = default)
     {
+        // Filter items with retry count less than 3
         var queueItems = await _queueRepository.GetQueryable()
+            .Where(q => q.RetryCount < 3)
             .OrderBy(q => q.CreatedAt)
             .Take(batchSize)
             .Select(q => new { q.Id, q.UserProfileId })
@@ -45,6 +47,21 @@ public class EmbeddingQueueService : IEmbeddingQueueService
     public async Task RemoveFromQueueAsync(int queueItemId, CancellationToken cancellationToken = default)
     {
         await _queueRepository.DeleteAsync(queueItemId);
+    }
+
+    public async Task RequeueWithRetryAsync(int queueItemId, CancellationToken cancellationToken = default)
+    {
+        var queueItem = await _queueRepository.GetQueryable()
+            .FirstOrDefaultAsync(q => q.Id == queueItemId, cancellationToken);
+
+        if (queueItem != null)
+        {
+            queueItem.RetryCount++;
+            queueItem.LastProcessedAt = DateTime.UtcNow;
+            queueItem.CreatedAt = DateTime.UtcNow; // Move to end of queue
+            
+            await _queueRepository.UpdateAsync(queueItem);
+        }
     }
 
     public async Task<int> GetQueueCountAsync(CancellationToken cancellationToken = default)

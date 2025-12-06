@@ -241,17 +241,6 @@ Rules:
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error parsing profile {UserProfileId} with OpenAI", profile.Id);
-            // Fallback: use simple extraction
-            profile.ParsedShortBio = profile.Bio.Length > 500 ? profile.Bio[..500] : profile.Bio;
-            profile.ParsedMainActivity = string.Empty;
-            profile.ParsedInterests = profile.Skills?.Any() == true 
-                ? string.Join(", ", profile.Skills.Select(s => s.Skill)) 
-                : string.Empty;
-            profile.ParsedCountry = string.Empty;
-            profile.ParsedCity = string.Empty;
-            profile.UpdatedAt = DateTime.UtcNow;
-            
-            await _userProfileRepository.UpdateAsync(profile);
         }
     }
 

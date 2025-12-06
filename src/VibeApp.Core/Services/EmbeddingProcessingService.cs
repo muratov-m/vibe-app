@@ -80,15 +80,30 @@ public class EmbeddingProcessingService : BackgroundService
             // Generate embedding (includes parsing step inside)
             await embeddingService.GenerateAndSaveEmbeddingAsync(userProfileId, cancellationToken);
             
-            // Only remove from queue after successful embedding generation
+            // Remove from queue after successful embedding generation
             await queueService.RemoveFromQueueAsync(queueItemId, cancellationToken);
             
             _logger.LogInformation("Successfully completed processing for profile ID: {ProfileId}", userProfileId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating embedding for profile ID: {ProfileId}. Item will remain in queue for retry.", 
+            _logger.LogError(ex, "Error generating embedding for profile ID: {ProfileId}. Requeuing with retry.", 
                 userProfileId);
+            
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var queueService = scope.ServiceProvider.GetRequiredService<IEmbeddingQueueService>();
+                
+                // Requeue item with incremented retry count
+                await queueService.RequeueWithRetryAsync(queueItemId, cancellationToken);
+                
+                _logger.LogInformation("Profile ID: {ProfileId} has been requeued for retry", userProfileId);
+            }
+            catch (Exception requeueEx)
+            {
+                _logger.LogError(requeueEx, "Failed to requeue profile ID: {ProfileId}", userProfileId);
+            }
         }
     }
 }

@@ -2540,3 +2540,63 @@ MapFallbackToFile()        // 9. Catch-all for SPA
 - API запросы: `/api/...` → ASP.NET Core controllers ✅
 
 **Build Status:** ✅ Обе проблемы исправлены
+
+---
+
+## Prompt #43
+
+### User Request
+```
+Давай улучшим EmbeddingProcessingService
+
+при DequeueBatchAsync нужно удалять пользователя из очереди 
+
+но если упали, то добавлять заново с новой датой, чтобы он выполнялся в конце
+
+если упали, проставлять счетчик падений. если больше 3 падений, то не нужно дальше обрабатывать пользователя
+```
+
+### Actions Taken
+Реализация retry-логики для обработки embeddings с ограничением попыток:
+
+1. **EmbeddingQueue entity** - добавлены поля:
+   - `RetryCount` (int, default 0) - счетчик попыток обработки
+   - `LastProcessedAt` (DateTime?) - время последней попытки обработки
+
+2. **Database migration** - создана миграция для новых полей
+
+3. **IEmbeddingQueueService** - добавлен метод:
+   - `RequeueWithRetryAsync()` - переставляет элемент в конец очереди с инкрементом счетчика
+
+4. **EmbeddingQueueService** - реализована retry-логика:
+   - При DequeueBatchAsync фильтруются записи с `RetryCount < 3`
+   - `RequeueWithRetryAsync()` обновляет `RetryCount`, `LastProcessedAt` и `CreatedAt` (для конца очереди)
+   - Элементы с 3+ попытками игнорируются при выборке
+
+5. **EmbeddingProcessingService** - улучшена обработка ошибок:
+   - При успехе: удаление из очереди (`RemoveFromQueueAsync`)
+   - При ошибке: повторная постановка в очередь (`RequeueWithRetryAsync`)
+   - После 3 неудачных попыток элемент остается в БД, но больше не обрабатывается
+   - Логирование всех этапов (успех/ошибка/превышение лимита)
+
+### Technical Decisions
+- **RetryCount вместо попыток**: Счетчик начинается с 0, максимум 2 retry (всего 3 попытки)
+- **LastProcessedAt**: Позволяет отследить когда была последняя попытка (полезно для дебага)
+- **CreatedAt обновляется при requeue**: Элементы с ошибкой уходят в конец очереди (ORDER BY CreatedAt)
+- **Элементы не удаляются после 3 попыток**: Остаются в БД для анализа, но фильтруются при DequeueBatchAsync
+
+### Errors & Issues
+**Проблема**: При создании миграции EF объединил изменения из нескольких предыдущих незакоммиченных миграций.
+- Миграция пыталась переименовать столбцы `Country`/`City` → `ParsedCountry`/`ParsedCity`, которых уже не было
+- Ошибка: `42703: столбец "Country" не существует`
+
+**Решение**:
+1. Удалил ошибочную миграцию: `dotnet ef migrations remove`
+2. Пересоздал миграцию заново - EF корректно объединил все pending изменения
+3. Успешно применил: `dotnet ef database update`
+
+Миграция добавила в таблицу `EmbeddingQueues`:
+- `RetryCount` (integer, default 0)
+- `LastProcessedAt` (timestamp nullable)
+
+**Build & Migration Status**: ✅ Все успешно собрано и применено
