@@ -127,24 +127,39 @@ public class RagSearchService : IRagSearchService
         var results = matchedProfileIds
             .Where(id => profileMap.ContainsKey(id))
             .Select(id => profileMap[id])
-            .Select(p => new ProfileSearchResultDto
+            .Select(p =>
             {
-                Id = p.Id,
-                Name = p.Name,
-                Bio = p.Bio,
-                Skills = p.Skills?.Select(s => s.Skill).ToList() ?? new List<string>(),
-                LookingFor = p.LookingFor?.Select(l => l.LookingFor).ToList() ?? new List<string>(),
-                Telegram = p.Telegram,
-                LinkedIn = p.LinkedIn,
-                Email = p.Email,
-                City = p.ParsedCity,
-                Country = p.ParsedCountry,
-                HasStartup = p.HasStartup,
-                StartupName = p.HasStartup ? p.StartupName : null,
-                StartupStage = p.HasStartup ? p.StartupStage : null,
-                CanHelp = p.CanHelp,
-                NeedsHelp = p.NeedsHelp,
-                SimilarityScore = (float)(1 - distanceMap[p.Id])
+                var distance = distanceMap[p.Id];
+                var similarityScore = (float)(1 - distance);
+                
+                // Ensure valid similarity score (prevent NaN/Infinity)
+                if (float.IsNaN(similarityScore) || float.IsInfinity(similarityScore))
+                {
+                    similarityScore = 0f;
+                }
+                
+                // Clamp to valid range [0, 1]
+                similarityScore = Math.Clamp(similarityScore, 0f, 1f);
+                
+                return new ProfileSearchResultDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Bio = p.Bio,
+                    Skills = p.Skills?.Select(s => s.Skill).ToList() ?? new List<string>(),
+                    LookingFor = p.LookingFor?.Select(l => l.LookingFor).ToList() ?? new List<string>(),
+                    Telegram = p.Telegram,
+                    LinkedIn = p.LinkedIn,
+                    Email = p.Email,
+                    City = p.ParsedCity,
+                    Country = p.ParsedCountry,
+                    HasStartup = p.HasStartup,
+                    StartupName = p.HasStartup ? p.StartupName : null,
+                    StartupStage = p.HasStartup ? p.StartupStage : null,
+                    CanHelp = p.CanHelp,
+                    NeedsHelp = p.NeedsHelp,
+                    SimilarityScore = similarityScore
+                };
             }).ToList();
 
         var response = new RagSearchResponseDto
