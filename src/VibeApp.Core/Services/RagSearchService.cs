@@ -40,9 +40,37 @@ public class RagSearchService : IRagSearchService
         var queryEmbedding = await GenerateQueryEmbeddingAsync(request.Query, cancellationToken);
         var queryVector = new Vector(queryEmbedding);
 
-        // Step 2: First, search for similar profile IDs using cosine distance (lightweight query)
-        // This is more efficient as pgvector can use indexes without JOINs
-        var similarEmbeddings = await _embeddingRepository.GetQueryable()
+        // Step 2: Build base query for embeddings
+        var embeddingsQuery = _embeddingRepository.GetQueryable();
+
+        // Step 3: Apply structured filters if provided (join with UserProfile)
+        if (request.Filters != null)
+        {
+            var profileQuery = _userProfileRepository.GetQueryable();
+
+            // Apply Country filter
+            if (!string.IsNullOrWhiteSpace(request.Filters.Country))
+            {
+                profileQuery = profileQuery.Where(p => p.Country == request.Filters.Country);
+            }
+
+            // Apply HasStartup filter
+            if (request.Filters.HasStartup.HasValue)
+            {
+                profileQuery = profileQuery.Where(p => p.HasStartup == request.Filters.HasStartup.Value);
+            }
+
+            // Get filtered profile IDs
+            var filteredProfileIds = await profileQuery
+                .Select(p => p.Id)
+                .ToListAsync(cancellationToken);
+
+            // Apply to embeddings query
+            embeddingsQuery = embeddingsQuery.Where(e => filteredProfileIds.Contains(e.UserProfileId));
+        }
+
+        // Step 4: Search for similar profile IDs using cosine distance (lightweight query)
+        var similarEmbeddings = await embeddingsQuery
             .OrderBy(e => e.Embedding.CosineDistance(queryVector))
             .Take(request.TopK)
             .Select(e => new
@@ -52,8 +80,7 @@ public class RagSearchService : IRagSearchService
             })
             .ToListAsync(cancellationToken);
 
-        // Step 3: Filter by similarity threshold (convert distance to similarity)
-        // Cosine distance is 1 - cosine_similarity, so similarity = 1 - distance
+        // Step 5: Filter by similarity threshold (convert distance to similarity)
         var filteredEmbeddings = similarEmbeddings
             .Where(r => (1 - r.Distance) >= request.MinSimilarity)
             .Take(request.TopK)
@@ -73,7 +100,7 @@ public class RagSearchService : IRagSearchService
             };
         }
 
-        // Step 4: Load full profile data for matched IDs (separate optimized query)
+        // Step 6: Load full profile data for matched IDs (separate optimized query)
         var matchedProfileIds = filteredEmbeddings.Select(e => e.UserProfileId).ToList();
         var distanceMap = filteredEmbeddings.ToDictionary(e => e.UserProfileId, e => e.Distance);
 
@@ -86,7 +113,7 @@ public class RagSearchService : IRagSearchService
         _logger.LogInformation("Found {Count} profiles matching query with similarity >= {MinSimilarity}",
             filteredEmbeddings.Count, request.MinSimilarity);
 
-        // Step 5: Map to response DTOs (preserving similarity score order)
+        // Step 7: Map to response DTOs (preserving similarity score order)
         var results = matchedProfileIds
             .Select(id => profiles.First(p => p.Id == id))
             .Select(p => new ProfileSearchResultDto
@@ -99,6 +126,8 @@ public class RagSearchService : IRagSearchService
                 Telegram = p.Telegram,
                 LinkedIn = p.LinkedIn,
                 Email = p.Email,
+                City = p.City,
+                Country = p.Country,
                 HasStartup = p.HasStartup,
                 StartupName = p.HasStartup ? p.StartupName : null,
                 StartupStage = p.HasStartup ? p.StartupStage : null,
@@ -114,7 +143,7 @@ public class RagSearchService : IRagSearchService
             TotalResults = results.Count
         };
 
-        // Step 6: Generate natural language response if requested
+        // Step 8: Generate natural language response if requested
         if (request.GenerateResponse)
         {
             response.Answer = await GenerateLlmResponseAsync(request.Query, results, cancellationToken);

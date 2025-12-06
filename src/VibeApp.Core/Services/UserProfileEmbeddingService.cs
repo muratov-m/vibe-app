@@ -116,49 +116,55 @@ public class UserProfileEmbeddingService : IUserProfileEmbeddingService
     {
         var sb = new StringBuilder();
 
-        // Name and contacts
-        sb.AppendLine($"Name: {profile.Name}");
-        
-        // Bio - most important for semantic search
+        // 1. Bio - MOST IMPORTANT for semantic search
         if (!string.IsNullOrWhiteSpace(profile.Bio))
             sb.AppendLine($"Bio: {profile.Bio}");
 
-        // Skills
-        if (profile.Skills?.Any() == true)
-        {
-            var skills = string.Join(", ", profile.Skills.Select(s => s.Skill));
-            sb.AppendLine($"Skills: {skills}");
-        }
-
-        // Looking for - networking goals
+        // 2. Looking For - networking goals (high priority)
         if (profile.LookingFor?.Any() == true)
         {
             var lookingFor = string.Join(", ", profile.LookingFor.Select(l => l.LookingFor));
             sb.AppendLine($"Looking for: {lookingFor}");
         }
 
-        // Startup info
-        if (profile.HasStartup)
+        // 3. Skills - professional skills
+        if (profile.Skills?.Any() == true)
         {
-            sb.AppendLine("Has startup: Yes");
-            if (!string.IsNullOrWhiteSpace(profile.StartupName))
-                sb.AppendLine($"Startup name: {profile.StartupName}");
-            if (!string.IsNullOrWhiteSpace(profile.StartupStage))
-                sb.AppendLine($"Startup stage: {profile.StartupStage}");
-            if (!string.IsNullOrWhiteSpace(profile.StartupDescription))
-                sb.AppendLine($"Startup description: {profile.StartupDescription}");
+            var skills = string.Join(", ", profile.Skills.Select(s => s.Skill));
+            sb.AppendLine($"Skills: {skills}");
         }
 
-        // Collaboration
+        // 4. Location - for geographic search
+        if (!string.IsNullOrWhiteSpace(profile.Country))
+            sb.AppendLine($"Country: {profile.Country}");
+        
+        if (!string.IsNullOrWhiteSpace(profile.City))
+            sb.AppendLine($"City: {profile.City}");
+
+        // 5. Startup info
+        if (profile.HasStartup)
+        {
+            if (!string.IsNullOrWhiteSpace(profile.StartupName))
+                sb.AppendLine($"Startup: {profile.StartupName}");
+            if (!string.IsNullOrWhiteSpace(profile.StartupDescription))
+                sb.AppendLine($"About startup: {profile.StartupDescription}");
+            if (!string.IsNullOrWhiteSpace(profile.StartupStage))
+                sb.AppendLine($"Stage: {profile.StartupStage}");
+        }
+
+        // 6. Collaboration
         if (!string.IsNullOrWhiteSpace(profile.CanHelp))
-            sb.AppendLine($"Can help with: {profile.CanHelp}");
+            sb.AppendLine($"Can help: {profile.CanHelp}");
         
         if (!string.IsNullOrWhiteSpace(profile.NeedsHelp))
-            sb.AppendLine($"Needs help with: {profile.NeedsHelp}");
+            sb.AppendLine($"Needs: {profile.NeedsHelp}");
 
-        // AI usage
+        // 7. AI usage
         if (!string.IsNullOrWhiteSpace(profile.AiUsage))
-            sb.AppendLine($"AI usage: {profile.AiUsage}");
+            sb.AppendLine($"AI: {profile.AiUsage}");
+
+        // 8. Name (at the end - less important for embeddings)
+        sb.AppendLine($"Name: {profile.Name}");
 
         return sb.ToString().Trim();
     }

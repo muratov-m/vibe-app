@@ -13,6 +13,10 @@ public class UserProfile : IEntity
     public string Email { get; set; } = string.Empty;
     public string Photo { get; set; } = string.Empty;
     
+    // Location information
+    public string City { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
+    
     // Startup information
     public bool HasStartup { get; set; }
     public string StartupStage { get; set; } = string.Empty;

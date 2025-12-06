@@ -16,6 +16,7 @@ public class AppDbContext : IdentityDbContext
     public DbSet<UserLookingFor> UserLookingFors => Set<UserLookingFor>();
     public DbSet<UserProfileEmbedding> UserProfileEmbeddings => Set<UserProfileEmbedding>();
     public DbSet<EmbeddingQueue> EmbeddingQueues => Set<EmbeddingQueue>();
+    public DbSet<Country> Countries => Set<Country>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,8 @@ public class AppDbContext : IdentityDbContext
             entity.Property(e => e.LinkedIn).HasMaxLength(500);
             entity.Property(e => e.Email).HasMaxLength(200);
             entity.Property(e => e.Photo).HasMaxLength(500);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.Country).HasMaxLength(100);
             entity.Property(e => e.StartupStage).HasMaxLength(100);
             entity.Property(e => e.StartupName).HasMaxLength(200);
             
@@ -84,6 +87,15 @@ public class AppDbContext : IdentityDbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.UserProfileId);
             entity.Property(e => e.CreatedAt).IsRequired();
+        });
+        
+        // Configure Country
+        modelBuilder.Entity<Country>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.Property(e => e.UserCount).HasDefaultValue(0);
         });
     }
 }

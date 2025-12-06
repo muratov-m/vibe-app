@@ -926,3 +926,127 @@ Git History не нужно добавлять и Development Stats
 - Updated `.cursorrules` logging requirement section
 - Added rule: "Record current time (⏱️) in prompt header, especially for error fixes"
 - Updated mandatory structure template: `## Prompt #N ⏱️ HH:MM`
+
+---
+
+## Prompt #34
+
+### User Request
+```
+Сделай ревью @src/VibeApp.Core/Services/UserProfileEmbeddingService.cs 
+
+Задача сделать RAG поиск участников
+1. по запросу пользователя
+2. по интересам или локации
+
+Что можно улучшить?
+```
+
+### Actions Taken
+- Проведено ревью кода UserProfileEmbeddingService.cs
+- Проанализирована задача RAG поиска по запросу и по интересам/локации
+- Выявлены области для улучшения в контексте задачи
+- Предложены 6 улучшений с приоритетами
+
+---
+
+## Prompt #35
+
+### User Request
+```
+Давай сделаем
+1. Добавис City + Country в BuildProfileText
+2. Сохраним все Country всех участников в БД в новую таблицу
+3. Гибридный поиск (semantic + filters): доп поля фильтрации - Country, HasStartup
+4. BuildProfileText - улучшение приоритетов
+```
+
+### Actions Taken
+- Adding City and Country fields to UserProfile entity
+- Creating Countries reference table
+- Implementing hybrid search with filters
+- Refactoring BuildProfileText with improved priorities
+
+**Completed:**
+
+1. **Added Location Fields to UserProfile**:
+   - Added `City` and `Country` string fields to UserProfile entity
+   - Updated AppDbContext with field configuration (max length 100)
+   - Updated migration for database schema
+
+2. **Created Countries Reference Table**:
+   - Created `Country` entity (Id, Name, UserCount, CreatedAt, UpdatedAt)
+   - Added to AppDbContext with unique index on Name
+   - Created migration `20251206120000_AddCityCountryAndCountriesTable`
+   - Created `ICountryService` and `CountryService` for managing countries
+   - `SyncCountriesAsync` - extracts all countries from profiles, updates counts
+   - `GetAllCountriesAsync` - returns countries ordered by user count
+
+3. **Updated BuildProfileText with Improved Priorities**:
+   - **NEW ORDER** (most important → least important for embeddings):
+     1. Bio (most semantic value)
+     2. Looking For (networking goals)
+     3. Skills (professional skills)
+     4. Location (Country + City) ✨ NEW
+     5. Startup info (name, description, stage)
+     6. Collaboration (can help, needs help)
+     7. AI usage
+     8. Name (at the end - less weight in embedding)
+   - Rationale: OpenAI embeddings give more weight to text at the beginning
+
+4. **Implemented Hybrid Search (Semantic + Structured Filters)**:
+   - Created `UserSearchFilters` DTO with `Country` and `HasStartup` fields
+   - Added `Filters` property to `RagSearchRequestDto`
+   - Updated `RagSearchService.SearchAsync`:
+     - Step 1: Apply structured filters to UserProfile (if provided)
+     - Step 2: Get filtered profile IDs
+     - Step 3: Apply to embeddings query (filters before vector search)
+     - Step 4: Execute vector similarity search on filtered set
+   - **Performance**: Filters applied at DB level before expensive vector operations
+
+5. **Updated DTOs**:
+   - Added `City` and `Country` to `UserProfileImportDto`
+   - Added `City` and `Country` to `ProfileSearchResultDto`
+   - Updated `UserProfileService.CreateNewProfile` to include location fields
+   - Updated `UserProfileService.UpdateExistingProfile` to include location fields
+
+6. **Created API Endpoints**:
+   - `POST /api/country/sync` - Sync countries from all profiles
+   - `GET /api/country` - Get all countries with user counts
+   - Updated `POST /api/userprofile/import` - now syncs countries after import
+
+7. **Registered Services**:
+   - Added `ICountryService` → `CountryService` to DI container
+
+### Errors & Issues
+**Error #1**: PowerShell syntax error
+- Problem: Used `&&` operator which is not valid in PowerShell
+- Fix: Changed to `;` separator or used full paths
+
+**Error #2**: `dotnet-ef` tool not found
+- Problem: EF Core CLI tools not installed or corrupted
+- Fix: Created migration manually following existing pattern
+
+**Error #3**: `GetAllAsync` doesn't exist in IRepository
+- Problem: Used non-existent method in CountryService
+- Fix: Changed to `GetQueryable().ToListAsync(cancellationToken)`
+
+### Technical Decisions
+**Why Countries as separate table?**
+- Provides quick access to all available countries
+- Shows user distribution by country
+- Enables autocomplete/dropdown in UI
+- Can be extended with country metadata later
+
+**Why hybrid search approach?**
+- Semantic search alone is slow for structured queries
+- Filtering 10,000 profiles by country through embeddings is expensive
+- Hybrid: filter first (cheap), then vector search (expensive but on smaller set)
+- **Example**: "Rust developers in Germany" → filter Country='Germany' (SQL index), then semantic search on skills
+
+**Filter order optimization**:
+- Structured filters BEFORE vector search (not after)
+- Uses database indexes (Country, HasStartup)
+- Reduces vector distance calculations
+
+**Build successful** ✅

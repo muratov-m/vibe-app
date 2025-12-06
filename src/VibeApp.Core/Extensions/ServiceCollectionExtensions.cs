@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserProfileEmbeddingService, UserProfileEmbeddingService>();
         services.AddScoped<IRagSearchService, RagSearchService>();
         services.AddScoped<IEmbeddingQueueService, EmbeddingQueueService>();
+        services.AddScoped<ICountryService, CountryService>();
 
         // Register background services
         services.AddHostedService<EmbeddingProcessingService>();

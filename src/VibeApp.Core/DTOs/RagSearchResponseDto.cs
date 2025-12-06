@@ -72,6 +72,16 @@ public class ProfileSearchResultDto
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
+    /// City
+    /// </summary>
+    public string City { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Country
+    /// </summary>
+    public string Country { get; set; } = string.Empty;
+
+    /// <summary>
     /// Whether user has a startup
     /// </summary>
     public bool HasStartup { get; set; }

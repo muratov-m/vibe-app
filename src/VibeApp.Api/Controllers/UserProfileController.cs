@@ -9,11 +9,16 @@ namespace VibeApp.Api.Controllers;
 public class UserProfileController : ControllerBase
 {
     private readonly IUserProfileService _userProfileService;
+    private readonly ICountryService _countryService;
     private readonly ILogger<UserProfileController> _logger;
 
-    public UserProfileController(IUserProfileService userProfileService, ILogger<UserProfileController> logger)
+    public UserProfileController(
+        IUserProfileService userProfileService,
+        ICountryService countryService,
+        ILogger<UserProfileController> logger)
     {
         _userProfileService = userProfileService;
+        _countryService = countryService;
         _logger = logger;
     }
 
@@ -32,6 +37,9 @@ public class UserProfileController : ControllerBase
             }
 
             var result = await _userProfileService.ImportUserProfilesAsync(dtos, cancellationToken);
+            
+            // Sync countries after import
+            await _countryService.SyncCountriesAsync(cancellationToken);
             
             return Ok(new 
             { 
