@@ -4,7 +4,7 @@
     <div class="bg-gradient-to-r from-primary-50 to-primary-100 p-4 relative">
       <div class="absolute top-4 right-4">
         <span class="bg-primary-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-          {{ (profile.similarityScore * 100).toFixed(0) }}% match
+          {{ (profile.similarityScore * 100).toFixed(0) }}% совпадение
         </span>
       </div>
       
@@ -27,19 +27,19 @@
       </div>
 
       <!-- Startup Badge -->
-      <div v-if="profile.hasStartup" class="flex items-center space-x-2 bg-purple-50 border border-purple-200 rounded-lg p-2">
+      <div v-if="profile.startupName || profile.startupStage || profile.hasStartup" class="flex items-center space-x-2 bg-purple-50 border border-purple-200 rounded-lg p-2">
         <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
         </svg>
         <div>
-          <p class="text-sm font-semibold text-purple-900">{{ profile.startupName || 'Startup Founder' }}</p>
+          <p class="text-sm font-semibold text-purple-900">{{ profile.startupName || 'Основатель стартапа' }}</p>
           <p v-if="profile.startupStage" class="text-xs text-purple-700">{{ profile.startupStage }}</p>
         </div>
       </div>
 
       <!-- Skills -->
       <div v-if="profile.skills && profile.skills.length > 0">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Skills</p>
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Навыки</p>
         <div class="flex flex-wrap gap-2">
           <span
             v-for="skill in profile.skills"
@@ -53,7 +53,7 @@
 
       <!-- Looking For -->
       <div v-if="profile.lookingFor && profile.lookingFor.length > 0">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Looking For</p>
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Ищет</p>
         <div class="flex flex-wrap gap-2">
           <span
             v-for="item in profile.lookingFor"
@@ -67,13 +67,13 @@
 
       <!-- Can Help -->
       <div v-if="profile.canHelp" class="text-sm">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Can Help With</p>
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Может помочь</p>
         <p class="text-gray-700">{{ profile.canHelp }}</p>
       </div>
 
       <!-- Needs Help -->
       <div v-if="profile.needsHelp" class="text-sm">
-        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Needs Help With</p>
+        <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Нужна помощь</p>
         <p class="text-gray-700">{{ profile.needsHelp }}</p>
       </div>
 

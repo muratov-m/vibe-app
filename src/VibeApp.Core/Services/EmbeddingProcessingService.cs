@@ -49,6 +49,18 @@ public class EmbeddingProcessingService : BackgroundService
                     ).ToList();
 
                     await Task.WhenAll(tasks);
+                    
+                    // Sync countries after processing batch (parsed countries are now available)
+                    try
+                    {
+                        var countryService = scope.ServiceProvider.GetRequiredService<ICountryService>();
+                        await countryService.SyncCountriesAsync(stoppingToken);
+                        _logger.LogInformation("Countries synced after batch processing");
+                    }
+                    catch (Exception syncEx)
+                    {
+                        _logger.LogWarning(syncEx, "Failed to sync countries after batch processing");
+                    }
                 }
                 else
                 {

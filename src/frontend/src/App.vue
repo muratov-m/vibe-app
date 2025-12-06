@@ -6,11 +6,11 @@
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-3xl font-bold text-gray-900">Vibe App</h1>
-            <p class="text-sm text-gray-500 mt-1">RAG-powered people search</p>
+            <p class="text-sm text-gray-500 mt-1">Умный поиск людей с RAG</p>
           </div>
           <div class="text-right">
             <p class="text-sm text-gray-600">
-              Powered by <span class="font-semibold">AI Embeddings</span>
+              На базе <span class="font-semibold">AI Embeddings</span>
             </p>
           </div>
         </div>
@@ -36,7 +36,7 @@
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
           </svg>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-red-800">Search Error</h3>
+            <h3 class="text-sm font-medium text-red-800">Ошибка поиска</h3>
             <p class="text-sm text-red-700 mt-1">{{ error }}</p>
           </div>
         </div>
@@ -53,8 +53,12 @@
               </svg>
             </div>
             <div class="ml-4 flex-1">
-              <h3 class="text-sm font-semibold text-gray-900 mb-2">AI Summary</h3>
-              <p class="text-gray-700 leading-relaxed">{{ searchResults.answer }}</p>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Резюме от AI</h3>
+              <div class="text-gray-700 leading-relaxed space-y-3">
+                <p v-for="(paragraph, index) in formatAISummary(searchResults.answer)" :key="index">
+                  {{ paragraph }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -62,11 +66,11 @@
         <!-- Results Header -->
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold text-gray-900">
-            {{ searchResults.totalResults }} 
-            {{ searchResults.totalResults === 1 ? 'Result' : 'Results' }} Found
+            Найдено: {{ searchResults.totalResults }} 
+            {{ searchResults.totalResults === 1 ? 'результат' : searchResults.totalResults < 5 ? 'результата' : 'результатов' }}
           </h2>
           <div v-if="searchResults.query" class="text-sm text-gray-500">
-            Query: "<span class="italic">{{ searchResults.query }}</span>"
+            Запрос: "<span class="italic">{{ searchResults.query }}</span>"
           </div>
         </div>
 
@@ -75,8 +79,8 @@
           <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">No profiles found</h3>
-          <p class="mt-1 text-sm text-gray-500">Try adjusting your search criteria or filters</p>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">Профили не найдены</h3>
+          <p class="mt-1 text-sm text-gray-500">Попробуйте изменить критерии поиска или фильтры</p>
         </div>
 
         <!-- Profile Cards Grid -->
@@ -94,17 +98,17 @@
         <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900">Start Your Search</h3>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">Начните поиск</h3>
         <p class="mt-2 text-sm text-gray-500">
-          Use natural language to find people based on skills, interests, and more
+          Используйте естественный язык для поиска людей по навыкам, интересам и многому другому
         </p>
         <div class="mt-6 space-y-2 text-xs text-gray-500 max-w-md mx-auto text-left bg-gray-50 rounded-lg p-4">
-          <p class="font-semibold text-gray-700">Example queries:</p>
+          <p class="font-semibold text-gray-700">Примеры запросов:</p>
           <ul class="list-disc list-inside space-y-1">
-            <li>"Who here knows Rust and likes hiking?"</li>
-            <li>"Find me a co-founder with marketing experience"</li>
-            <li>"Looking for AI/ML experts in Germany"</li>
-            <li>"Who can help with startup fundraising?"</li>
+            <li>"Кто здесь знает Rust и любит походы?"</li>
+            <li>"Найди мне со-основателя с опытом в маркетинге"</li>
+            <li>"Ищу экспертов в AI/ML из Германии"</li>
+            <li>"Кто может помочь с привлечением инвестиций?"</li>
           </ul>
         </div>
       </div>
@@ -114,7 +118,7 @@
     <footer class="mt-16 bg-white border-t border-gray-200">
       <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <p class="text-center text-sm text-gray-500">
-          Built with Vue 3 + Vite + Tailwind CSS • Backend: ASP.NET Core 9 + PostgreSQL + pgvector
+          Разработано на Vue 3 + Vite + Tailwind CSS • Бэкенд: ASP.NET Core 9 + PostgreSQL + pgvector
         </p>
       </div>
     </footer>
@@ -140,11 +144,40 @@ const handleSearch = async (request) => {
     const results = await ragSearchService.search(request)
     searchResults.value = results
   } catch (err) {
-    error.value = err.message || 'Failed to perform search'
+    error.value = err.message || 'Не удалось выполнить поиск'
     console.error('Search error:', err)
   } finally {
     loading.value = false
   }
+}
+
+const formatAISummary = (text) => {
+  if (!text) return []
+  // Split by double newlines or by sentences if no double newlines
+  let paragraphs = text.split('\n\n').filter(p => p.trim())
+  
+  // If no double newlines, try to split long text intelligently
+  if (paragraphs.length === 1 && text.length > 200) {
+    // Split by sentence endings followed by space and capital letter
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
+    paragraphs = []
+    let currentParagraph = ''
+    
+    sentences.forEach((sentence, i) => {
+      currentParagraph += sentence
+      // Create new paragraph every 2-3 sentences or if current is long enough
+      if ((i + 1) % 2 === 0 || currentParagraph.length > 250) {
+        paragraphs.push(currentParagraph.trim())
+        currentParagraph = ''
+      }
+    })
+    
+    if (currentParagraph.trim()) {
+      paragraphs.push(currentParagraph.trim())
+    }
+  }
+  
+  return paragraphs
 }
 </script>
 
