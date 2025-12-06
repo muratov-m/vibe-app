@@ -72,7 +72,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Serve default files (index.html)
+app.UseDefaultFiles();
 app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();

@@ -2290,3 +2290,111 @@ System.InvalidOperationException: An error was generated for warning 'Microsoft.
 - Данные из старых полей НЕ сохраняются (не нужны)
 - Все Parsed* поля будут заполнены AI при следующей обработке профилей
 - После деплоя нужно будет переобработать профили для заполнения новых полей
+
+---
+
+## Prompt #50
+
+### User Request
+```
+Проблемы с фронтом:
+
+1. Запросы идут на http://localhost:5000/ нужно на текущий хост (или https://vibe-app.onrender.com/ )
+
+2. Не происходит редирект на index.html автоматически
+```
+
+### Actions Taken
+1. **Исправлена проблема с hardcoded API URL:**
+   - Изменен `API_BASE_URL` в `api.js`: с `'http://localhost:5000'` на `''` (пустая строка)
+   - Теперь используются относительные пути `/api/...`
+   - Запросы идут на тот же хост, где открыт фронтенд
+   - В production на Render: `https://vibe-app.onrender.com/api/...`
+   - В development с Vite proxy: `/api/...` → proxy → `http://localhost:5000/api/...`
+
+2. **Добавлен автоматический редирект на index.html:**
+   - Добавлен `app.UseDefaultFiles()` в Program.cs перед `UseStaticFiles()`
+   - Теперь запрос к `/` автоматически отдает `/index.html`
+   - `UseDefaultFiles()` ищет: index.html, default.html, default.htm
+   - Порядок middleware важен: DefaultFiles → StaticFiles → Routing
+
+---
+
+## Prompt #51
+
+### User Request
+```
+VITE_API_BASE_URL
+
+переименуй на 
+
+VIBE_API_BASE_URL
+```
+
+### Actions Taken
+- Переименовал переменную окружения с `VITE_API_BASE_URL` → `VIBE_API_BASE_URL`
+- Обновлены файлы:
+  - `src/frontend/src/services/api.js` - изменено на `import.meta.env.VIBE_API_BASE_URL`
+  - `src/frontend/README.md` - обновлены 2 примера использования
+  - `docs/VIBE_LOG.md` - обновлена документация в Prompt #50
+
+### Technical Decisions
+
+**Почему переименование имеет смысл:**
+- `VIBE_` prefix соответствует названию проекта (Vibe App)
+- `VITE_` prefix - это стандарт Vite для env переменных
+- Но пользовательские переменные могут иметь любой prefix, если используется `import.meta.env`
+- Все переменные в `.env` файлах Vite доступны через `import.meta.env` независимо от префикса
+
+**Как использовать:**
+```bash
+# В development создайте .env.local
+echo "VIBE_API_BASE_URL=http://localhost:5000" > .env.local
+
+# В production на Render
+# Добавьте environment variable: VIBE_API_BASE_URL
+```
+
+**Build Status:** ✅ Переменная переименована во всех местах
+
+### Technical Decisions
+
+**Почему пустая строка вместо URL:**
+- Относительные пути работают и в development, и в production
+- Vite proxy перехватывает `/api/*` в dev режиме
+- В production ASP.NET Core обрабатывает `/api/*` напрямую
+- Не нужно настраивать разные URL для разных окружений
+
+**Почему UseDefaultFiles() перед UseStaticFiles():**
+- `UseDefaultFiles()` переписывает путь в request (/ → /index.html)
+- `UseStaticFiles()` видит уже переписанный путь и отдает файл
+- Если наоборот - не сработает
+
+**Middleware Order (важен!):**
+```csharp
+UseHttpsRedirection()      // 1. Redirect HTTP → HTTPS
+UseDefaultFiles()          // 2. Rewrite / → /index.html
+UseStaticFiles()           // 3. Serve static files (wwwroot)
+UseRouting()               // 4. Match routes
+UseAuthentication()        // 5. Auth
+UseAuthorization()         // 6. Authz
+MapControllers()           // 7. API endpoints
+MapRazorPages()            // 8. Razor pages
+MapFallbackToFile()        // 9. Catch-all for SPA
+```
+
+### Files Changed
+1. `src/frontend/src/services/api.js` - используем относительные URL
+2. `src/VibeApp.Api/Program.cs` - добавлен UseDefaultFiles()
+
+### Testing
+**Development:**
+- `http://localhost:5173/` → Vite dev server → загружает index.html ✅
+- API запросы: `/api/...` → Vite proxy → `http://localhost:5000/api/...` ✅
+
+**Production (после build):**
+- `http://localhost:5000/` → UseDefaultFiles() → `/index.html` → Vue SPA ✅
+- `https://vibe-app.onrender.com/` → UseDefaultFiles() → `/index.html` → Vue SPA ✅
+- API запросы: `/api/...` → ASP.NET Core controllers ✅
+
+**Build Status:** ✅ Обе проблемы исправлены

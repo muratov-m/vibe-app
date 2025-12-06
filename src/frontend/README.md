@@ -180,7 +180,7 @@ export default defineConfig({
 Create `.env.local` to override API URL:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000
+VIBE_API_BASE_URL=http://localhost:5000
 ```
 
 For production, Render will use the same origin.
@@ -304,7 +304,7 @@ Custom colors in `tailwind.config.js`.
 
 Edit `src/services/api.js`:
 ```js
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VIBE_API_BASE_URL || 'http://localhost:5000';
 ```
 
 ### Add New Component
