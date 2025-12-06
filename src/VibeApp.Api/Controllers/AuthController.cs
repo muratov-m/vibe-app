@@ -133,15 +133,20 @@ public class AuthController : ControllerBase
     /// Get current user info
     /// </summary>
     [HttpGet("me")]
-    [Authorize]
     public async Task<IActionResult> GetCurrentUser()
     {
         try
         {
+            // Check if user is actually authenticated
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new { error = "User is not authenticated" });
+            }
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound(new { error = "User not found" });
+                return Unauthorized(new { error = "User not found" });
             }
 
             var roles = await _userManager.GetRolesAsync(user);

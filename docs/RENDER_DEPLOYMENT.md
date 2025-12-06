@@ -19,12 +19,15 @@ Render automatically:
 
 ## Environment Variables
 
-Add in Render Dashboard:
+Add in Render Dashboard → Environment:
 ```
 OPENAI_API_KEY = sk-your-key-here
+ASPNETCORE_ENVIRONMENT = Production
 ```
 
-`DATABASE_URL` is auto-configured.
+`DATABASE_URL` is auto-configured by Render.
+
+**Important:** The application automatically configures cookies and HTTPS settings for production.
 
 ## Routes After Deploy
 
@@ -57,3 +60,14 @@ Open http://localhost:5000 - should see Vue SPA.
 
 **API works but Vue doesn't:**
 - Frontend wasn't built - check Docker build logs
+
+**Login/Register forms return 400 Bad Request:**
+- Application now auto-configures cookies for HTTPS
+- Cookie settings: SameSite=Lax, SecurePolicy=SameAsRequest
+- Antiforgery tokens properly configured
+- Should work after redeployment with latest changes
+
+**Database migrations not applying:**
+- Check logs during startup
+- Migrations apply automatically in Program.cs on non-Development environment
+- Verify DATABASE_URL is set correctly

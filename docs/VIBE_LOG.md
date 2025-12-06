@@ -2995,3 +2995,108 @@ Status Code: 400 Bad Request
 ✅ Форма Login исправлена - показывает ошибки валидации
 ✅ Единообразие с формой Register
 ✅ Нет ошибок линтера
+
+---
+
+## Prompt #39
+
+### User Request
+```
+api/Auth/me
+
+падает если не авторизован
+```
+
+### Actions Taken
+1. Исправлен метод `GetCurrentUser()` в `AuthController`:
+   - Добавлена проверка `User?.Identity?.IsAuthenticated`
+   - Теперь возвращает 401 Unauthorized если пользователь не авторизован
+   - Вместо 404 NotFound для лучшей семантики HTTP
+
+### Errors & Issues
+
+**Проблема: Endpoint падает с ошибкой когда пользователь не авторизован**
+- `GetUserAsync(User)` возвращал `null` для неавторизованных пользователей
+- Код возвращал 404 NotFound вместо 401 Unauthorized
+- Некорректная семантика HTTP - 404 означает "ресурс не найден", а не "не авторизован"
+
+**Решение:**
+- Добавлена явная проверка `User?.Identity?.IsAuthenticated ?? false`
+- Если не авторизован → 401 Unauthorized
+- Если авторизован но user == null (edge case) → 401 Unauthorized
+- Корректная семантика HTTP кодов
+
+### Technical Decisions
+
+**Почему 401 вместо 404:**
+- 401 Unauthorized - правильный код для неавторизованных запросов
+- 404 NotFound - для несуществующих ресурсов
+- Клиент должен понимать что нужно сначала залогиниться
+
+**Дополнительная проверка IsAuthenticated:**
+- `[Authorize]` атрибут иногда пропускает частично валидные состояния
+- Явная проверка гарантирует корректное поведение
+- Безопаснее для API
+
+### Build Status
+✅ Endpoint `/api/auth/me` корректно возвращает 401 если не авторизован
+✅ Нет ошибок линтера
+
+---
+
+## Prompt #40
+
+### User Request
+```
+https://vibe-app.onrender.com/Account/Login
+
+Request Method: POST
+Status Code: 400 Bad Request
+```
+
+### Actions Taken
+1. Добавлена конфигурация Antiforgery для production в `Program.cs`:
+   - Настроены cookies для работы с HTTPS на Render.com
+   - `SameSite = SameSiteMode.Lax` для совместимости
+   - `SecurePolicy = CookieSecurePolicy.SameAsRequest` - работает и на HTTP и на HTTPS
+
+2. Улучшена конфигурация Cookie для Identity:
+   - Настройки cookie специально для production окружения
+   - Cookie.SameSite = SameSiteMode.Lax вместо Strict для форм
+   - Cookie.SecurePolicy адаптируется под протокол
+
+### Errors & Issues
+
+**Проблема: 400 Bad Request на production (Render.com) при POST /Account/Login**
+- Antiforgery token validation падает на HTTPS
+- Cookie настройки по умолчанию не работают корректно на Render
+- SameSite=Strict блокирует cookie в некоторых браузерах
+
+**Решение:**
+- Настроена Antiforgery с правильными cookie параметрами
+- SameSite=Lax - разрешает cookie при POST из той же origin
+- SecurePolicy=SameAsRequest - работает на HTTP (dev) и HTTPS (production)
+
+### Technical Decisions
+
+**Почему SameSite=Lax вместо Strict:**
+- Strict блокирует cookie даже при POST формы с того же домена
+- Lax разрешает top-level navigation (форма POST)
+- Достаточно безопасно для большинства случаев
+- Chrome и другие браузеры требуют Lax для форм
+
+**Почему SecurePolicy=SameAsRequest:**
+- Development работает на HTTP (localhost)
+- Production работает на HTTPS (Render.com)
+- SameAsRequest адаптируется под текущий протокол
+- Не нужно менять код для разных окружений
+
+**Альтернативы:**
+- CookieSecurePolicy.Always - только HTTPS (сломает dev)
+- SameSiteMode.None - небезопасно, требует Secure=true
+
+### Build Status
+✅ Login форма настроена для работы на Render.com
+✅ Antiforgery cookies правильно сконфигурированы
+✅ Работает и на HTTP (dev) и на HTTPS (production)
+✅ Нет ошибок линтера

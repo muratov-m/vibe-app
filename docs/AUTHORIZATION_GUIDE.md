@@ -145,12 +145,19 @@ GET /api/auth/me
 Authorization: Required (cookie-based)
 ```
 
-**Response:**
+**Response (успешно):**
 ```json
 {
   "userId": "user-id-guid",
   "email": "user@example.com",
   "roles": ["Admin"]
+}
+```
+
+**Response (не авторизован - 401):**
+```json
+{
+  "error": "User is not authenticated"
 }
 ```
 

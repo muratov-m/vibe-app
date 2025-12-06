@@ -16,6 +16,15 @@ builder.Services.AddControllers()
     });
 builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
+
+// Configure Antiforgery for production (Render.com HTTPS)
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.Lax; // Allows POST from same origin
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Works on HTTP (dev) and HTTPS (prod)
+    options.Cookie.HttpOnly = true;
+});
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "VibeApp API", Version = "v1" });
@@ -74,6 +83,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    
+    // Cookie settings for production compatibility
+    options.Cookie.SameSite = SameSiteMode.Lax; // Allows cookies on form POST
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Works on HTTP (dev) and HTTPS (prod)
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
 // Add health checks
