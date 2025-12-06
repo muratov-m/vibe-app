@@ -50,6 +50,17 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add health checks
 builder.Services.AddHealthChecks();
 
+// Add CORS for frontend development
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -57,6 +68,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("AllowFrontend");
 }
 
 app.UseHttpsRedirection();
@@ -69,6 +81,9 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapRazorPages();
 app.MapHealthChecks("/health");
+
+// SPA fallback - serve Vue app for all non-API routes
+app.MapFallbackToFile("index.html");
 
 // Apply migrations on startup (for render.com)
 if (!app.Environment.IsDevelopment())
