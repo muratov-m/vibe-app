@@ -1,48 +1,4 @@
-# Vibe Coding Competition - Development Log
-
-## Prompt #73
-
-### User Request
-```
-исправь
-
-Небезопасный парсинг JSON
-Дублирование логики очистки markdown
-StringBuilder можно оптимизировать
-```
-
-### Actions Taken
-- Fixed unsafe JSON parsing with length checks
-- Refactored markdown cleanup logic into separate method `CleanJsonResponse()`
-- Optimized StringBuilder with initial capacity
-
-## Prompt #72
-
-### User Request
-```
-Сделай ревью @src/VibeApp.Core/Services/MatchSummaryService.cs
-```
-
-### Actions Taken
-- Code review of MatchSummaryService.cs performed
-
-## 🚨 Key Errors & Fixes (for jury review)
-
-| # | Error | Root Cause | Fix | Prompt |
-|---|-------|------------|-----|--------|
-| 1 | Docker build failed on Render | Dockerfile only copied VibeApp.Api, missing Core/Data projects | Build entire solution (`dotnet build VibeApp.sln`) | #15 |
-| 2 | `CS0234: namespace 'Core' does not exist` | Multi-project dependencies not resolved | Copy all .csproj files, restore solution | #15 |
-| 3 | `42P07: relation "UserProfileEmbeddings" already exists` | Migration not idempotent | Added `IF NOT EXISTS` check | #19 |
-| 4 | `QuerySplittingBehavior not configured` warning | Multiple collection navigations without split | Configured `QuerySplittingBehavior.SplitQuery` | #19 |
-| 5 | Circular reference in JSON serialization | Navigation properties UserProfile↔UserSkill | Added `ReferenceHandler.IgnoreCycles` | #13 |
-| 6 | Service Locator anti-pattern | Injected IServiceProvider directly | Replaced with IServiceScopeFactory | #14 |
-| 7 | Memory inefficiency - loading all records | `GetAllAsync()` then filter in memory | Added `GetQueryable()`, filter at DB level | #14 |
-| 8 | Model `gpt-5-mini` doesn't exist | AI hallucinated model name | User corrected to `gpt-4o-mini` | #26 |
-| 9 | Incomplete model change | AI changed only Gateway, forgot Service | User manually fixed RagSearchService | #27 |
-| 10 | Rules written in Russian | AI used wrong language | User requested English | #29 |
-| 11 | `PendingModelChangesWarning` on deploy | AppDbContextModelSnapshot not updated after migration | Manually synced snapshot with Country entity | #48 |
-
----
+﻿# Vibe Coding Competition - Development Log
 
 ## 2025-12-05 20:01 - Initial Setup
 
@@ -2186,7 +2142,7 @@ System.InvalidOperationException: An error was generated for warning 'Microsoft.
 
 ---
 
-## Prompt #24
+## Prompt #49
 
 ### User Request
 ```
@@ -2569,7 +2525,7 @@ MapFallbackToFile()        // 9. Catch-all for SPA
 
 ---
 
-## Prompt #43
+## Prompt #54
 
 ### User Request
 ```
@@ -2629,7 +2585,7 @@ MapFallbackToFile()        // 9. Catch-all for SPA
 
 ---
 
-## Prompt #54
+## Prompt #55
 
 ### User Request
 ```
@@ -2681,7 +2637,7 @@ https://vibe-app.onrender.com
 
 ---
 
-## Prompt #35
+## Prompt #56
 
 ### User Request
 ```
@@ -2824,7 +2780,7 @@ UserProfileController
 
 ---
 
-## Prompt #36
+## Prompt #57
 
 ### User Request
 ```
@@ -2892,7 +2848,7 @@ UserProfileController
 
 ---
 
-## Prompt #37
+## Prompt #58
 
 ### User Request
 ```
@@ -2971,7 +2927,7 @@ UserProfileController
 
 ---
 
-## Prompt #38
+## Prompt #59
 
 ### User Request
 ```
@@ -3024,7 +2980,7 @@ Status Code: 400 Bad Request
 
 ---
 
-## Prompt #39
+## Prompt #60
 
 ### User Request
 ```
@@ -3070,7 +3026,7 @@ api/Auth/me
 
 ---
 
-## Prompt #40
+## Prompt #61
 
 ### User Request
 ```
@@ -3129,7 +3085,7 @@ Status Code: 400 Bad Request
 
 ---
 
-## Prompt #41
+## Prompt #62
 
 ### User Request
 ```
@@ -3185,7 +3141,7 @@ Status Code: 400 Bad Request
 
 ---
 
-## Prompt #42
+## Prompt #63
 
 ### User Request
 ```
@@ -3242,7 +3198,7 @@ Status Code: 400 Bad Request
 
 ---
 
-## Prompt #43
+## Prompt #64
 
 ### User Request
 ```
@@ -3273,7 +3229,7 @@ Status Code: 400 Bad Request
 ✅ Файл удален
 ✅ Документация не потеряна (есть в других файлах)
 
-## Prompt #44
+## Prompt #65
 
 ### User Request
 ```
@@ -3310,7 +3266,7 @@ Status Code
 
 ---
 
-## Prompt #19
+## Prompt #66
 
 ### User Request
 ```
@@ -3376,7 +3332,7 @@ at System.Text.Json.Utf8JsonWriter.WriteNumberValue(Single value)
 
 ---
 
-## Prompt #20
+## Prompt #67
 
 ### User Request
 ```
@@ -3452,7 +3408,7 @@ app.MapFallback(context =>
 - `/Admin` и другие Razor Pages тоже будут работать
 - Клиентский роутинг Vue сохраняется для всех остальных маршрутов
 
-## Prompt #N+2
+## Prompt #68
 
 ### User Request
 ```
@@ -3487,7 +3443,7 @@ razor page
 - Использовать существующие сервисы `IUserService` и `IEmbeddingQueueService` для получения метрик, чтобы не лезть напрямую в `DbContext`
 - Ограничить доступ к странице с помощью `[Authorize(Roles = "Admin")]` и стандартной куки-авторизации Identity
 
-## Prompt #N+3
+## Prompt #69
 
 ### User Request
 ```
@@ -3510,7 +3466,7 @@ rnd.develop@gmail.com
 - Менять только текстовые значения email, не затрагивая структуру SQL и кода миграций
 - Сохранить логику миграции, просто указав новый email-адрес администратора
 
-## Prompt #23
+## Prompt #70
 
 ### User Request
 ```
@@ -3539,7 +3495,7 @@ public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @doc
 - Использовать единый переменный `baseUrl` для всех запросов
 - Разнести эндпоинты по папкам: Auth (регистрация/логин/инфо/выход), Admin (роли, очередь embeddings, импорт/управление профилями), Public (RAG-поиск, публичные профили, health, страны)
 
-## Prompt #24
+## Prompt #71
 
 ### User Request
 ```
@@ -3565,7 +3521,7 @@ public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @doc
 - Использовать стандартную куки-аутентификацию Identity (`IdentityConstants.ApplicationScheme`) и убедиться, что после логина выполняется редирект на изначальный `returnUrl`
 - Проверить, что у тестового пользователя действительно есть роль `Admin` и что она попадает в куки (через `User.IsInRole("Admin")`)
 
-## Prompt #25
+## Prompt #72
 
 ### User Request
 ```
@@ -3585,7 +3541,7 @@ public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @doc
 - Временное снятие защиты по роли `Admin` позволит упростить отладку проблем с cookie/авторизацией на странице `/Admin`
 - Важно позже вернуть `[Authorize(Roles = "Admin")]`, чтобы админ-панель снова была защищена
 
-## Prompt #26
+## Prompt #73
 
 ### User Request
 ```
@@ -3607,7 +3563,7 @@ public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @doc
 - Для простого агрегата (количества профилей) целесообразно использовать прямой доступ к `AppDbContext` в `AdminModel`, без расширения доменного сервиса `IUserProfileService`
 - Использование `CountAsync()` по `UserProfiles` соответствует best practices EF Core и не тянет лишние данные в память
 
-## Prompt #27
+## Prompt #74
 
 ### User Request
 ```
@@ -3639,7 +3595,7 @@ public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @doc
 
 ---
 
-## Prompt #43
+## Prompt #75
 
 ### User Request
 ```
@@ -3676,7 +3632,7 @@ AI Summary
 
 ---
 
-## Prompt #44
+## Prompt #76
 
 ### User Request
 ```
@@ -3705,7 +3661,7 @@ AI Summary
 
 ---
 
-## Prompt #45
+## Prompt #77
 
 ### User Request
 ```
@@ -3728,7 +3684,7 @@ AI Summary
 
 ---
 
-## Prompt #46
+## Prompt #78
 
 ### User Request
 ```
@@ -3759,7 +3715,7 @@ development ai speech_recognition speech2text whisper agents spiking_neural__net
 
 ---
 
-## Prompt #47
+## Prompt #79
 
 ### User Request
 ```
@@ -3783,7 +3739,7 @@ development ai speech_recognition speech2text whisper agents spiking_neural__net
 
 ---
 
-## Prompt #46
+## Prompt #80
 
 ### User Request
 ```
@@ -3828,7 +3784,7 @@ ParsedInterests ParsedMainActivity ParsedCountry ParsedCity
 
 ---
 
-## Prompt #47
+## Prompt #81
 
 ### User Request
 ```
@@ -3853,7 +3809,7 @@ ParsedInterests ParsedMainActivity ParsedCountry ParsedCity
 
 ---
 
-## Prompt #48
+## Prompt #82
 
 ### User Request
 ```
@@ -3886,7 +3842,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #49
+## Prompt #83
 
 ### User Request
 ```
@@ -3920,7 +3876,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #50
+## Prompt #84
 
 ### User Request
 ```
@@ -3970,7 +3926,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #13
+## Prompt #85
 
 ### User Request
 ```
@@ -4010,7 +3966,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #14
+## Prompt #86
 
 ### User Request
 ```
@@ -4037,7 +3993,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #15
+## Prompt #87
 
 ### User Request
 ```
@@ -4061,7 +4017,7 @@ MatchingEmbeddingController не нужен, удали
 - Цветовая схема: фиолетовый для AI инсайтов, зеленый для действий (начать диалог)
 
 ---
-## Prompt #16
+## Prompt #88
 
 ### User Request
 ```
@@ -4098,7 +4054,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #17
+## Prompt #89
 
 ### User Request
 ```
@@ -4122,7 +4078,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #18
+## Prompt #90
 
 ### User Request
 ```
@@ -4150,7 +4106,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #19
+## Prompt #91
 
 ### User Request
 ```
@@ -4190,7 +4146,7 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
-## Prompt #20
+## Prompt #92
 
 ### User Request
 ```
