@@ -1,5 +1,3 @@
-using VibeApp.Core.Entities;
-
 namespace VibeApp.Core.Interfaces;
 
 /// <summary>
@@ -20,12 +18,5 @@ public interface IUserProfileEmbeddingService
     /// <param name="userProfileId">ID of the user profile</param>
     /// <param name="cancellationToken">Cancellation token</param>
     Task DeleteEmbeddingAsync(int userProfileId, CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Get embedding for a user profile
-    /// </summary>
-    /// <param name="userProfileId">ID of the user profile</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    Task<UserProfileEmbedding?> GetEmbeddingAsync(int userProfileId, CancellationToken cancellationToken = default);
 }
 

@@ -4169,3 +4169,52 @@ MatchingEmbeddingController не нужен, удали
 
 ---
 
+## Prompt #93
+
+### User Request
+```
+В резюме от AI ссылки на TG не кликаемые
+```
+
+### Actions Taken
+- Изменен `formatAISummaryHTML` в `App.vue`
+- Telegram хендлы (@username) теперь преобразуются в кликабельные ссылки `<a href="https://t.me/username">`
+- Добавлены стили: `text-primary-600 hover:text-primary-700 font-medium underline`
+- Ссылки открываются в новой вкладке (`target="_blank"`)
+- Рефакторинг: создана helper функция `formatText()` для устранения дублирования кода
+- Пересобран фронтенд
+
+### Technical Decisions
+- Использован формат `https://t.me/username` для Telegram ссылок
+- Добавлен `target="_blank"` для открытия в новой вкладке
+- Подчеркивание ссылок для лучшей видимости
+- Hover эффект для улучшения UX
+
+---
+
+## Prompt #94
+
+### User Request
+```
+User Match карточки пользователей должны быть по строкам
+
+Найдено: 3 совпадения не нужно отображать
+
+О себе - нужно выводить из ParsedShortBio
+```
+
+### Actions Taken
+- Изменен layout карточек в User Match с grid (3 колонки) на стек (по строкам)
+- Удален заголовок "Найдено: X совпадений"
+- Изменено поле "О себе" с `bio` на `parsedShortBio`
+- Изменен App.vue: убран блок с заголовком результатов
+- Изменен MatchProfileCard.vue: использование `match.profile.parsedShortBio` вместо `match.profile.bio`
+- Пересборка фронтенда
+
+### Technical Decisions
+- Карточки теперь отображаются в одну колонку (grid-cols-1) для лучшей читаемости на всех устройствах
+- Удалены медиа-запросы для адаптивного grid (md:grid-cols-2 lg:grid-cols-3)
+- ParsedShortBio используется как основное описание профиля пользователя
+
+---
+

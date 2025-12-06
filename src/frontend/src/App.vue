@@ -170,16 +170,8 @@
 
         <!-- Match Results -->
         <div v-if="!matchLoading && matchResults && matchResults.length > 0">
-          <!-- Results Header -->
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">
-              Найдено: {{ matchResults.length }} 
-              {{ matchResults.length === 1 ? 'совпадение' : matchResults.length < 5 ? 'совпадения' : 'совпадений' }}
-            </h2>
-          </div>
-
-          <!-- Profile Cards Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Profile Cards Stack -->
+          <div class="grid grid-cols-1 gap-6">
             <MatchProfileCard
               v-for="match in matchResults"
               :key="match.profile.id"
@@ -306,23 +298,22 @@ const formatAISummary = (text) => {
 const formatAISummaryHTML = (text) => {
   if (!text) return ''
   
-  // Convert markdown-style formatting to HTML for better display
-  let html = text
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Italic
-    .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>') // Telegram handles
+  // Helper function to format text with markdown and telegram links
+  const formatText = (str) => {
+    return str
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Italic
+      .replace(/@(\w+)/g, '<a href="https://t.me/$1" target="_blank" class="text-primary-600 hover:text-primary-700 font-medium underline">@$1</a>') // Telegram links
+  }
   
   // Handle numbered lists (1. 2. 3.)
   const numberedListRegex = /^\d+\.\s+(.+)$/gm
   if (numberedListRegex.test(text)) {
     const items = text.split(/\n(?=\d+\.\s)/).filter(item => item.trim())
-    html = '<ol class="list-decimal list-inside space-y-2 ml-2">'
+    let html = '<ol class="list-decimal list-inside space-y-2 ml-2">'
     items.forEach(item => {
       const cleaned = item.replace(/^\d+\.\s+/, '').trim()
-      const formatted = cleaned
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-        .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>')
+      const formatted = formatText(cleaned)
       html += `<li class="ml-2">${formatted}</li>`
     })
     html += '</ol>'
@@ -333,13 +324,10 @@ const formatAISummaryHTML = (text) => {
   const bulletListRegex = /^[-•]\s+(.+)$/gm
   if (bulletListRegex.test(text)) {
     const items = text.split(/\n(?=[-•]\s)/).filter(item => item.trim())
-    html = '<ul class="list-disc list-inside space-y-2 ml-2">'
+    let html = '<ul class="list-disc list-inside space-y-2 ml-2">'
     items.forEach(item => {
       const cleaned = item.replace(/^[-•]\s+/, '').trim()
-      const formatted = cleaned
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-        .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>')
+      const formatted = formatText(cleaned)
       html += `<li class="ml-2">${formatted}</li>`
     })
     html += '</ul>'
@@ -349,17 +337,14 @@ const formatAISummaryHTML = (text) => {
   // Otherwise, split into paragraphs
   const paragraphs = text.split('\n\n').filter(p => p.trim())
   if (paragraphs.length > 1) {
-    html = paragraphs.map(p => {
-      const formatted = p
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-        .replace(/@(\w+)/g, '<span class="text-primary-600 font-medium">@$1</span>')
+    const html = paragraphs.map(p => {
+      const formatted = formatText(p)
       return `<p class="mb-2">${formatted}</p>`
     }).join('')
     return html
   }
   
-  return html
+  return formatText(text)
 }
 </script>
 

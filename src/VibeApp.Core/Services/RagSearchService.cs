@@ -188,8 +188,11 @@ public class RagSearchService : IRagSearchService
     {
         _logger.LogInformation("Generating LLM response for {Count} profiles", profiles.Count);
 
-        // Limit profiles to top 10 to avoid exceeding token limits
-        var topProfiles = profiles.Take(10).ToList();
+        // Limit profiles to top 5 to avoid exceeding token limits
+        var topProfiles = profiles
+            .OrderByDescending(x => x.SimilarityScore)
+            .Take(5)
+            .ToList();
 
         // Build context from matching profiles
         var contextBuilder = new StringBuilder();

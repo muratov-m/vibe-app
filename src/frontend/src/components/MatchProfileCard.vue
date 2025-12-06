@@ -52,7 +52,7 @@
       </div>
 
       <!-- Bio -->
-      <div v-if="match.profile.bio" class="flex items-start space-x-3">
+      <div v-if="match.profile.parsedShortBio" class="flex items-start space-x-3">
         <div class="flex-shrink-0 mt-0.5">
           <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
             <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@
         </div>
         <div class="flex-1">
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">О себе</p>
-          <p class="text-gray-700 leading-relaxed">{{ match.profile.bio }}</p>
+          <p class="text-gray-700 leading-relaxed">{{ match.profile.parsedShortBio }}</p>
         </div>
       </div>
 

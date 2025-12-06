@@ -96,11 +96,6 @@ public class UserProfileEmbeddingService : IUserProfileEmbeddingService
         }
     }
 
-    public async Task<UserProfileEmbedding?> GetEmbeddingAsync(int userProfileId, CancellationToken cancellationToken = default)
-    {
-        return await _embeddingRepository.FirstOrDefaultAsync(e => e.UserProfileId == userProfileId);
-    }
-
     private async Task<Vector> GenerateEmbeddingAsync(UserProfile profile, CancellationToken cancellationToken)
     {
         var profileText = BuildProfileText(profile);
