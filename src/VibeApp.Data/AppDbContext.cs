@@ -15,6 +15,7 @@ public class AppDbContext : IdentityDbContext
     public DbSet<UserSkill> UserSkills => Set<UserSkill>();
     public DbSet<UserLookingFor> UserLookingFors => Set<UserLookingFor>();
     public DbSet<UserProfileEmbedding> UserProfileEmbeddings => Set<UserProfileEmbedding>();
+    public DbSet<UserMatchingEmbedding> UserMatchingEmbeddings => Set<UserMatchingEmbedding>();
     public DbSet<EmbeddingQueue> EmbeddingQueues => Set<EmbeddingQueue>();
     public DbSet<Country> Countries => Set<Country>();
 
@@ -80,6 +81,23 @@ public class AppDbContext : IdentityDbContext
             entity.HasOne(e => e.UserProfile)
                 .WithOne()
                 .HasForeignKey<UserProfileEmbedding>(e => e.UserProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure UserMatchingEmbedding
+        modelBuilder.Entity<UserMatchingEmbedding>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserProfileId).IsUnique();
+            
+            // Configure vector column with 1536 dimensions (OpenAI embedding size)
+            entity.Property(e => e.Embedding)
+                .HasColumnType("vector(1536)")
+                .IsRequired();
+            
+            entity.HasOne(e => e.UserProfile)
+                .WithOne()
+                .HasForeignKey<UserMatchingEmbedding>(e => e.UserProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
         

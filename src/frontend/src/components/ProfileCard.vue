@@ -42,7 +42,7 @@
         <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Навыки</p>
         <div class="flex flex-wrap gap-2">
           <span
-            v-for="skill in profile.skills"
+            v-for="skill in parseSkills(profile.skills)"
             :key="skill"
             class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
           >
@@ -56,7 +56,7 @@
         <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Ищет</p>
         <div class="flex flex-wrap gap-2">
           <span
-            v-for="item in profile.lookingFor"
+            v-for="item in parseLookingFor(profile.lookingFor)"
             :key="item"
             class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
           >
@@ -127,5 +127,38 @@ defineProps({
     required: true
   }
 })
+
+// Parse skills - handle both array and single string with spaces
+const parseSkills = (skills) => {
+  if (!skills) return []
+  if (Array.isArray(skills)) {
+    // If it's an array with a single item that contains spaces/underscores, split it
+    if (skills.length === 1 && typeof skills[0] === 'string' && skills[0].includes(' ')) {
+      return skills[0].split(/\s+/).filter(s => s.trim())
+    }
+    return skills
+  }
+  // If it's a string, split by spaces
+  if (typeof skills === 'string') {
+    return skills.split(/\s+/).filter(s => s.trim())
+  }
+  return []
+}
+
+// Parse looking for - handle both array and single string
+const parseLookingFor = (lookingFor) => {
+  if (!lookingFor) return []
+  if (Array.isArray(lookingFor)) {
+    // If it's an array with a single item that contains multiple items, try to split
+    if (lookingFor.length === 1 && typeof lookingFor[0] === 'string' && lookingFor[0].includes(' ')) {
+      return lookingFor[0].split(/\s+/).filter(s => s.trim())
+    }
+    return lookingFor
+  }
+  if (typeof lookingFor === 'string') {
+    return lookingFor.split(/\s+/).filter(s => s.trim())
+  }
+  return []
+}
 </script>
 

@@ -18,7 +18,9 @@ public static class ServiceCollectionExtensions
         // Register business logic services
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserProfileService, UserProfileService>();
+        services.AddScoped<IUserProfileParsingService, UserProfileParsingService>();
         services.AddScoped<IUserProfileEmbeddingService, UserProfileEmbeddingService>();
+        services.AddScoped<IUserMatchingEmbeddingService, UserMatchingEmbeddingService>();
         services.AddScoped<IRagSearchService, RagSearchService>();
         services.AddScoped<IEmbeddingQueueService, EmbeddingQueueService>();
         services.AddScoped<ICountryService, CountryService>();

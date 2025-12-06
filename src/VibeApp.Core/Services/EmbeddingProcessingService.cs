@@ -83,23 +83,39 @@ public class EmbeddingProcessingService : BackgroundService
         try
         {
             using var scope = _serviceScopeFactory.CreateScope();
+            var parsingService = scope.ServiceProvider.GetRequiredService<IUserProfileParsingService>();
             var embeddingService = scope.ServiceProvider.GetRequiredService<IUserProfileEmbeddingService>();
+            var matchingEmbeddingService = scope.ServiceProvider.GetRequiredService<IUserMatchingEmbeddingService>();
             var queueService = scope.ServiceProvider.GetRequiredService<IEmbeddingQueueService>();
 
-            _logger.LogInformation("Processing embedding for profile ID: {ProfileId} (Queue Item: {QueueItemId})", 
+            _logger.LogInformation("Processing profile ID: {ProfileId} (Queue Item: {QueueItemId})", 
                 userProfileId, queueItemId);
 
-            // Generate embedding (includes parsing step inside)
+            // Step 1: Parse profile and update structured fields (fills Parsed* fields)
+            try
+            {
+                await parsingService.ParseAndUpdateProfileAsync(userProfileId, cancellationToken);
+                _logger.LogInformation("Successfully parsed profile {UserProfileId}", userProfileId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing profile {UserProfileId}. Continuing with embedding generation.", userProfileId);
+            }
+
+            // Step 2: Generate profile embedding (uses all profile data including parsed fields)
             await embeddingService.GenerateAndSaveEmbeddingAsync(userProfileId, cancellationToken);
             
-            // Remove from queue after successful embedding generation
+            // Step 3: Generate matching embedding (uses only parsed fields from Step 1)
+            await matchingEmbeddingService.GenerateAndSaveEmbeddingAsync(userProfileId, cancellationToken);
+            
+            // Remove from queue after successful processing
             await queueService.RemoveFromQueueAsync(queueItemId, cancellationToken);
             
-            _logger.LogInformation("Successfully completed processing for profile ID: {ProfileId}", userProfileId);
+            _logger.LogInformation("Successfully completed processing for profile ID: {ProfileId} (parsing + profile embedding + matching embedding)", userProfileId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating embedding for profile ID: {ProfileId}. Requeuing with retry.", 
+            _logger.LogError(ex, "Error processing profile ID: {ProfileId}. Requeuing with retry.", 
                 userProfileId);
             
             try

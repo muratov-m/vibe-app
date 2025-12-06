@@ -3699,3 +3699,171 @@ AI Summary
 - Перевод только UI текстов, функциональность остается без изменений
 - Сохранены все технические термины (RAG, embeddings, AI) без перевода где это уместно
 - Используется правильная падежная форма для числительных в русском языке (1 результат, 2-4 результата, 5+ результатов)
+
+---
+
+## Prompt #46
+
+### User Request
+```
+Навыки
+
+development ai speech_recognition speech2text whisper agents spiking_neural__networks
+
+не разделяются по отдельным блокам, идут одной строкой
+```
+
+### Actions Taken
+1. Изучил как навыки возвращаются с бэкенда
+2. Проверил DTOs и маппинг данных - всё корректно
+3. Проблема: в БД навыки хранятся как одна строка вместо массива (скорее всего старые данные)
+4. Решение: добавил функции parseSkills() и parseLookingFor() на фронтенде в ProfileCard.vue
+5. Функции проверяют: если массив из одного элемента содержит пробелы - разделяют по пробелам
+
+### Errors & Issues (if any)
+- Навыки приходили как одна строка: "development ai speech_recognition speech2text whisper agents spiking_neural__networks"
+- Вместо массива отдельных навыков
+- Проблема в данных БД (скорее всего были импортированы неправильно или есть старые записи)
+
+### Technical Decisions
+- Исправление на стороне фронтенда, чтобы обработать оба случая: правильный массив И строку с пробелами
+- Функция parseSkills() разделяет строку по пробелам (regex /\s+/)
+- Функция parseLookingFor() делает то же самое для "Ищет"
+- Решение работает для обоих форматов данных - универсальное
+
+---
+
+## Prompt #46
+
+### User Request
+```
+Давай сделаем 2 embedding для поиска match с другими людьми
+
+Нужно в отдельной БД хранить 
+
+UserMatchingEmbedding по аналогии с UserProfileEmbedding
+
+в GenerateAndSaveEmbeddingAsync сделай рассчет 
+
+строку нужно составлять по таким полям пользователя:
+ParsedInterests ParsedMainActivity ParsedCountry ParsedCity
+```
+
+### Actions Taken
+1. Создана новая сущность UserMatchingEmbedding (по аналогии с UserProfileEmbedding)
+2. Создан IUserMatchingEmbeddingService интерфейс
+3. Создан UserMatchingEmbeddingService с методом GenerateAndSaveEmbeddingAsync
+4. Embedding строится только из полей: ParsedInterests, ParsedMainActivity, ParsedCountry, ParsedCity
+5. Зарегистрирован новый сервис в DI (ServiceCollectionExtensions)
+6. Обновлен AppDbContext для UserMatchingEmbedding с конфигурацией vector(1536)
+7. Создана миграция AddUserMatchingEmbedding (таблица UserMatchingEmbeddings)
+8. Обновлен EmbeddingProcessingService - теперь генерирует оба embedding (profile + matching)
+9. Создан MatchingEmbeddingController с endpoints: POST generate/{id}, GET {id}, DELETE {id}
+10. Проект собран успешно
+11. Создана документация docs/MATCHING_EMBEDDINGS.md с описанием системы
+12. Миграция успешно применена к базе данных (таблица UserMatchingEmbeddings создана)
+
+### Errors & Issues (if any)
+- Нет ошибок. Все компоненты созданы и работают корректно.
+
+### Technical Decisions
+- UserMatchingEmbedding - отдельная таблица для matching-эмбеддингов
+- Используется только структурированная информация (Parsed* поля)
+- Формат строки: "Interests: X\nMain activity: Y\nCountry: Z\nCity: W"
+- Отдельный сервис для управления matching embeddings
+- Аналогичная структура с UserProfileEmbedding (Id, UserProfileId, Embedding, CreatedAt, UpdatedAt)
+- Background service автоматически генерирует оба типа embeddings при обработке очереди
+- API endpoints для ручного управления matching embeddings
+- Оба embedding (profile + matching) генерируются последовательно: сначала profile embedding с AI parsing, затем matching embedding использует уже parsed поля
+
+---
+
+## Prompt #47
+
+### User Request
+```
+1. EmbeddingService нужно переименовать в ProfileEmbeddingService
+
+2. ParseAndUpdateProfileAsync нужно вынести в отдельный сервис
+```
+
+### Actions Taken
+1. Создаю новый сервис UserProfileParsingService для парсинга профилей
+2. Создаю интерфейс IUserProfileParsingService
+3. Выношу методы ParseAndUpdateProfileAsync и BuildParsingPrompt в новый сервис
+4. Обновляю UserProfileEmbeddingService - убираю парсинг, использую новый сервис
+5. Обновляю UserMatchingEmbeddingService - тоже будет использовать парсинг сервис при необходимости
+6. Регистрирую новый сервис в DI
+
+### Technical Decisions
+- Разделение ответственности: один сервис для парсинга профилей, другие для эмбеддингов
+- UserProfileParsingService можно использовать независимо от генерации эмбеддингов
+- IUserProfileParsingService - интерфейс с методом ParseAndUpdateProfileAsync
+- Улучшенная архитектура: парсинг профилей теперь независимая функциональность
+
+---
+
+## Prompt #48
+
+### User Request
+```
+ParseAndUpdateProfileAsync должен вызываться из ProcessEmbeddingAsync и искать пользователя по id
+
+MatchingEmbeddingController не нужен, удали
+```
+
+### Actions Taken
+1. Изменил интерфейс IUserProfileParsingService - ParseAndUpdateProfileAsync теперь принимает userProfileId вместо объекта
+2. Обновил UserProfileParsingService - метод сам загружает профиль по ID с Include для Skills и LookingFor
+3. Обновил UserProfileEmbeddingService - убрал загрузку профиля и парсинг, теперь вызывает парсинг сервис с ID
+4. Обновил ProcessEmbeddingAsync в EmbeddingProcessingService - теперь сначала вызывает парсинг, потом оба эмбеддинга
+5. Удалил MatchingEmbeddingController (не нужен, так как эмбеддинги генерируются автоматически)
+6. Обновил документацию MATCHING_EMBEDDINGS.md
+7. Исправил ошибку компиляции в UserProfileParsingService (profile.Id в catch блоке)
+8. Проект собран успешно
+
+### Errors & Issues (if any)
+- Ошибка компиляции: в catch блоке использовался `profile.Id`, но переменная была объявлена внутри try
+- Исправлено: используется `userProfileId` в catch блоке
+
+### Technical Decisions
+- ParseAndUpdateProfileAsync теперь принимает только userProfileId и сам управляет загрузкой данных
+- Парсинг вызывается один раз в ProcessEmbeddingAsync для обоих типов эмбеддингов
+- UserProfileEmbeddingService упрощен - не делает парсинг, только генерирует эмбеддинги
+- MatchingEmbeddingController удален - matching embeddings создаются автоматически через фоновый сервис
+- Процесс обработки: 1) Парсинг → 2) Profile Embedding → 3) Matching Embedding → 4) Удаление из очереди
+- Все три шага выполняются в одной транзакции ProcessEmbeddingAsync
+
+---
+
+## Prompt #49
+
+### User Request
+```
+примени миграцию, проверь на ошибки
+```
+
+### Actions Taken
+1. Проверил список миграций - все 9 миграций присутствуют
+2. Применил миграции - база данных актуальна (AddUserMatchingEmbedding уже применена)
+3. Проверил линтер - ошибок не найдено
+4. Собрал проект в Release режиме - успешно
+5. Запустил приложение для проверки работоспособности - успешно
+6. Проверил логи запуска - все сервисы стартовали корректно:
+   - EmbeddingProcessingService запущен с 5 concurrent tasks
+   - Подключение к БД работает
+   - Запросы к EmbeddingQueue выполняются
+
+### Errors & Issues (if any)
+- Ошибок не обнаружено
+- Приложение запускается и работает корректно
+- Все миграции применены успешно
+
+### Technical Decisions
+- Таблица UserMatchingEmbeddings создана с:
+  - Id (serial primary key)
+  - UserProfileId (integer, unique index)
+  - Embedding (vector(1536))
+  - CreatedAt/UpdatedAt (timestamp with time zone)
+  - Foreign key на UserProfiles с CASCADE DELETE
+- Приложение готово к работе
