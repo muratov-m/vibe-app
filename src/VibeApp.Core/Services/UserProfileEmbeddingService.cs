@@ -130,6 +130,23 @@ public class UserProfileEmbeddingService : IUserProfileEmbeddingService
     {
         var sb = new StringBuilder();
 
+        // PRIORITY 1: Parsed fields (AI-structured data) - if available
+        if (!string.IsNullOrWhiteSpace(profile.ParsedShortBio))
+            sb.AppendLine($"Summary: {profile.ParsedShortBio}");
+        
+        if (!string.IsNullOrWhiteSpace(profile.ParsedMainActivity))
+            sb.AppendLine($"Main activity: {profile.ParsedMainActivity}");
+        
+        if (!string.IsNullOrWhiteSpace(profile.ParsedInterests))
+            sb.AppendLine($"Interests: {profile.ParsedInterests}");
+        
+        if (!string.IsNullOrWhiteSpace(profile.ParsedCountry))
+            sb.AppendLine($"Country: {profile.ParsedCountry}");
+        
+        if (!string.IsNullOrWhiteSpace(profile.ParsedCity))
+            sb.AppendLine($"City: {profile.ParsedCity}");
+
+        // PRIORITY 2: Original fields
         // 1. Bio - MOST IMPORTANT for semantic search
         if (!string.IsNullOrWhiteSpace(profile.Bio))
             sb.AppendLine($"Bio: {profile.Bio}");

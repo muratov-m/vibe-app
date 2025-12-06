@@ -3580,3 +3580,33 @@ public в третье@docs/VibeApp-UserProfile-API.postman_collection.json @doc
 ### Technical Decisions
 - Для простого агрегата (количества профилей) целесообразно использовать прямой доступ к `AppDbContext` в `AdminModel`, без расширения доменного сервиса `IUserProfileService`
 - Использование `CountAsync()` по `UserProfiles` соответствует best practices EF Core и не тянет лишние данные в память
+
+## Prompt #27
+
+### User Request
+```
+Давай доработаем BuildProfileText
+
+цель улучшить построение Embedding
+
+вначале нужно выводить Parsed поля если они есть
+
+далее уже поля, которые были ранее
+```
+
+### Actions Taken
+- Изменена структура метода `BuildProfileText` в `UserProfileEmbeddingService.cs`
+- Parsed-поля (ParsedShortBio, ParsedMainActivity, ParsedInterests, ParsedCountry, ParsedCity) теперь выводятся первыми, если они заполнены
+- Далее выводятся оригинальные поля профиля (Bio, LookingFor, Skills, startup-информация и т.д.)
+- Это должно улучшить качество embeddings, так как обработанные AI-парсером данные будут иметь больший вес в векторном представлении
+
+### Errors & Issues (if any)
+- Пока нет
+
+### User Corrections (if user made manual fixes)
+- Пока нет
+
+### Technical Decisions
+- Parsed-поля имеют приоритет, так как они структурированы и очищены AI
+- Порядок важен для embeddings - первые токены имеют большее влияние на вектор
+- Сохранены оригинальные поля для полноты контекста и обратной совместимости
