@@ -3348,6 +3348,84 @@ at System.Text.Json.Utf8JsonWriter.WriteNumberValue(Single value)
 - ❌ Фильтрация в SQL: сложнее реализовать проверку на NaN/Infinity на уровне PostgreSQL
 - ✅ Фильтрация после загрузки + валидация: простое и надежное решение
 
+---
+
+## Prompt #20
+
+### User Request
+```
+Login вроде заработал, но Account/Profile все равно требует авторизации, проверь
+```
+
+### Actions Taken
+- Проанализирован `Profile.cshtml.cs` — атрибут `[Authorize]` присутствует (строка 9)
+- Проверен `Login.cshtml.cs` — логин вызывает `PasswordSignInAsync` корректно
+- Проверен `Program.cs` — конфигурация cookies и middleware
+
+**Обнаружена проблема:**
+- `MapFallbackToFile("index.html")` на строке 174 перехватывает ВСЕ маршруты, включая `/Account/Profile`
+- После успешного логина при переходе на `/Account/Profile` сервер возвращает Vue SPA (index.html) вместо Razor Page
+- Это не даёт Razor Page отобразиться, даже если пользователь залогинен
+
+**Решение:**
+- Настроить fallback так, чтобы он НЕ перехватывал маршруты Razor Pages (`/Account/*`, `/Admin/*`)
+- Использовать `MapFallbackToFile` с pattern, исключающим известные серверные маршруты
+
+**Изменения в `Program.cs` (строки 169-189):**
+```csharp
+app.MapFallback(context =>
+{
+    var path = context.Request.Path.Value ?? "";
+    
+    // Don't fallback for API endpoints, Razor Pages, or static files
+    if (path.StartsWith("/api") ||
+        path.StartsWith("/Account") ||
+        path.StartsWith("/Admin"))
+    {
+        context.Response.StatusCode = 404;
+        return Task.CompletedTask;
+    }
+    
+    // Serve index.html for all other routes (SPA)
+    context.Request.Path = "/index.html";
+    return context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
+});
+```
+
+### Errors & Issues (if any)
+**Проблема:**
+- После успешного логина переход на `/Account/Profile` отображал Vue SPA вместо Razor Page
+- Пользователь был залогинен, но страница не показывалась
+
+**Причина:**
+- `MapFallbackToFile("index.html")` перехватывал ВСЕ маршруты без исключений
+- Порядок middleware правильный, но fallback срабатывал раньше, чем Razor Pages обрабатывали запрос
+- ASP.NET Core обрабатывает fallback ПОСЛЕ всех других endpoint'ов, но старая версия не проверяла путь
+
+**Решение:**
+- Заменён `MapFallbackToFile` на `MapFallback` с явной проверкой пути
+- Для `/api/*`, `/Account/*`, `/Admin/*` возвращаем 404 (пусть обрабатывает соответствующий handler)
+- Для остальных путей (клиентский роутинг Vue) возвращаем `index.html`
+
+### User Corrections (if user made manual fixes)
+- Пользователь убрал часть кода фильтрации NaN/Infinity из предыдущего фикса (Prompt #19) в `RagSearchService.cs`
+- Это нормально — валидация в DTO + JSON config достаточна для защиты
+
+### Technical Decisions
+**Почему MapFallback с проверкой, а не MapFallbackToFile:**
+- `MapFallbackToFile` не позволяет легко исключить определённые паттерны путей
+- `MapFallback` даёт полный контроль над тем, какие запросы обслуживать как SPA
+
+**Альтернативы:**
+- ❌ Убрать SPA fallback полностью: клиентский роутинг Vue перестанет работать
+- ❌ Использовать `MapWhen`: более сложная конфигурация, труднее читать
+- ✅ `MapFallback` с проверкой пути: простой и явный подход
+
+**Последствия:**
+- Теперь `/Account/Profile` корректно отображает Razor Page для залогиненных пользователей
+- `/Admin` и другие Razor Pages тоже будут работать
+- Клиентский роутинг Vue сохраняется для всех остальных маршрутов
+
 ## Prompt #N+2
 
 ### User Request

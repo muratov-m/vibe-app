@@ -170,8 +170,25 @@ app.MapControllers();
 app.MapRazorPages();
 app.MapHealthChecks("/health");
 
-// SPA fallback - serve Vue app for all non-API routes
-app.MapFallbackToFile("index.html");
+// SPA fallback - serve Vue app for client-side routes only
+// Exclude /api/*, /Account/*, /Admin/* to let API controllers and Razor Pages work
+app.MapFallback(context =>
+{
+    var path = context.Request.Path.Value ?? "";
+    
+    // Don't fallback for API endpoints, Razor Pages, or static files
+    if (path.StartsWith("/api", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/Account", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = 404;
+        return Task.CompletedTask;
+    }
+    
+    // Serve index.html for all other routes (SPA)
+    context.Request.Path = "/index.html";
+    return context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
+});
 
 // Apply migrations on startup (for render.com)
 if (!app.Environment.IsDevelopment())
