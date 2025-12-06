@@ -12,6 +12,7 @@
 - ✅ **Embedding Queue** - асинхронная очередь для генерации embeddings через OpenAI
 - ✅ **RAG Search** - семантический поиск профилей пользователей
 - ✅ **OpenAI Gateway** - интеграция с OpenAI Chat Completions API
+- ✅ **Vue 3 Frontend** - современный одностраничный интерфейс для RAG поиска
 - ✅ **Простая архитектура** - все через constructor injection, без Service Locator
 - ✅ **Postman коллекция** для тестирования API
 - ✅ PostgreSQL для хранения данных
@@ -21,6 +22,7 @@
 
 ## Технологии
 
+### Backend
 - ASP.NET Core 9.0
 - ASP.NET Core Identity
 - Razor Pages
@@ -31,6 +33,11 @@
 - Docker
 - Swagger/OpenAPI
 
+### Frontend
+- **Vue 3** - Composition API
+- **Vite** - Build tool
+- **Tailwind CSS** - Utility-first CSS framework
+
 ## Локальная разработка
 
 ### Требования
@@ -38,6 +45,7 @@
 - .NET 9.0 SDK
 - PostgreSQL (или Docker для запуска PostgreSQL)
 - **pgvector extension** для PostgreSQL (для работы с embeddings)
+- Node.js 18+ и npm (для фронтенда)
 
 ### Настройка PostgreSQL локально
 
@@ -87,13 +95,62 @@ dotnet run
 - HTTPS: https://localhost:5001
 - Swagger UI: http://localhost:5000/swagger
 
+### Запуск Frontend (Vue 3 + Vite)
+
+**Вариант 1: Development режим (с hot reload)**
+
+Backend (Terminal 1):
+```bash
+cd src/VibeApp.Api
+dotnet run
+```
+
+Frontend (Terminal 2):
+```bash
+cd src\frontend
+npm install
+npm run dev
+```
+
+Frontend будет доступен по адресу: http://localhost:5173
+
+**Вариант 2: Production режим (встроенный в backend)**
+
+Соберите фронтенд и запустите только backend:
+
+Windows:
+```bash
+build.cmd
+cd src\VibeApp.Api
+dotnet run
+```
+
+Linux/macOS:
+```bash
+chmod +x build.sh
+./build.sh
+cd src/VibeApp.Api
+dotnet run
+```
+
+Vue приложение будет встроено в backend: http://localhost:5000
+
+**Подробнее:** `docs/FRONTEND_INTEGRATION.md`
+
 ### Страницы сайта
 
-- `/` - Главная страница
+**Backend (Razor Pages):**
+- `/` - Главная страница (или Vue SPA если встроен)
 - `/Account/Register` - Регистрация
 - `/Account/Login` - Вход
 - `/Account/Profile` - Профиль пользователя (требует авторизации)
 - `/Account/Logout` - Выход
+
+**Frontend (Vue SPA):**
+- http://localhost:5173 - RAG Search интерфейс (dev mode)
+- http://localhost:5000 - RAG Search интерфейс (production, встроен в backend)
+
+**Подробнее:** `docs/FRONTEND_INTEGRATION.md`
 
 ### Создание и применение миграций
 
@@ -109,33 +166,21 @@ dotnet ef database update
 
 ## Деплой на Render.com
 
-### Автоматический деплой
+```bash
+git add .
+git commit -m "Deploy with Vue frontend"
+git push
+```
 
-1. Создайте аккаунт на [render.com](https://render.com)
-2. Подключите ваш GitHub репозиторий
-3. Render автоматически обнаружит файл `render.yaml` и создаст:
-   - PostgreSQL базу данных
-   - Web Service с Docker
+Render автоматически соберёт Vue frontend и задеплоит приложение (~3-4 минуты).
 
-### Ручная настройка
+**После деплоя:**
+- `https://your-app.onrender.com/` → Vue SPA ✅
+- `https://your-app.onrender.com/api/*` → API
 
-Если автоматический деплой не работает:
+**Environment Variable:** Добавьте `OPENAI_API_KEY` в Render Dashboard
 
-1. **Создайте PostgreSQL базу данных:**
-   - Name: `vibe-app-db`
-   - Database: `vibeapp`
-   - User: `vibeapp`
-   - Region: `Frankfurt` (или любой другой)
-
-2. **Создайте Web Service:**
-   - Environment: `Docker`
-   - Build Command: (оставьте пустым, используется Dockerfile)
-   - Start Command: (оставьте пустым, используется ENTRYPOINT из Dockerfile)
-   - Environment Variables:
-     - `ASPNETCORE_ENVIRONMENT`: `Production`
-     - `ASPNETCORE_URLS`: `http://+:8080`
-     - `DATABASE_URL`: подключите к созданной базе данных
-   - Health Check Path: `/health`
+**Подробнее:** `docs/RENDER_DEPLOYMENT.md`
 
 ## API Endpoints
 

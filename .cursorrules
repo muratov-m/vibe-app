@@ -105,10 +105,11 @@ Project must work in BOTH environments:
 - Docker support required
 
 ### 7. Documentation Rules
-- **NEVER** create architecture documents (ARCHITECTURE.md, etc.) unless explicitly requested
-- **NEVER** create additional *.md files proactively
+- **NEVER** create additional *.md files unless explicitly requested by user
 - Only update existing documentation when making changes
-- Keep README.md concise and practical
+- Keep documentation concise and practical - only essential information
+- Save any new documentation (if explicitly requested) in `docs/` folder
+- README.md should be brief overview with links to docs folder
 
 ## WORKFLOW
 1. Log user prompt to `docs/VIBE_LOG.md`

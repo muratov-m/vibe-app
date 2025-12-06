@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Install Node.js for frontend build
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
 # Copy solution file and all csproj files for restore
 COPY VibeApp.sln .
 COPY src/VibeApp.Core/VibeApp.Core.csproj src/VibeApp.Core/
@@ -9,10 +13,18 @@ COPY src/VibeApp.Data/VibeApp.Data.csproj src/VibeApp.Data/
 COPY src/VibeApp.Api/VibeApp.Api.csproj src/VibeApp.Api/
 RUN dotnet restore "VibeApp.sln"
 
-# Copy everything else and build
+# Copy everything else
 COPY src/VibeApp.Core/ src/VibeApp.Core/
 COPY src/VibeApp.Data/ src/VibeApp.Data/
 COPY src/VibeApp.Api/ src/VibeApp.Api/
+COPY src/frontend/ src/frontend/
+
+# Build frontend
+WORKDIR /src/src/frontend
+RUN npm install && npm run build
+
+# Build backend
+WORKDIR /src
 RUN dotnet build "VibeApp.sln" -c Release --no-restore
 
 # Publish stage
