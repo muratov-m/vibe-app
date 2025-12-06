@@ -20,12 +20,11 @@ The jury evaluates:
 - **ALWAYS** log every user prompt and actions taken to `docs/VIBE_LOG.md`
 - Log BEFORE making changes
 - Each user request = new entry in log (including corrections/follow-ups)
-- **Record current time** (⏱️) in prompt header, especially for error fixes
 
 **MANDATORY STRUCTURE for each Prompt:**
 
 ```markdown
-## Prompt #N ⏱️ HH:MM
+## Prompt #N
 
 ### User Request
 ```

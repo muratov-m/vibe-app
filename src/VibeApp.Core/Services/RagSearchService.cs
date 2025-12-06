@@ -34,6 +34,16 @@ public class RagSearchService : IRagSearchService
 
     public async Task<RagSearchResponseDto> SearchAsync(RagSearchRequestDto request, CancellationToken cancellationToken = default)
     {
+        // Validate input parameters
+        if (string.IsNullOrWhiteSpace(request.Query))
+            throw new ArgumentException("Query cannot be empty", nameof(request.Query));
+
+        if (request.TopK <= 0)
+            throw new ArgumentException("TopK must be positive", nameof(request.TopK));
+
+        if (request.MinSimilarity < 0 || request.MinSimilarity > 1)
+            throw new ArgumentException("MinSimilarity must be between 0 and 1", nameof(request.MinSimilarity));
+
         _logger.LogInformation("RAG search started for query: {Query}", request.Query);
 
         // Step 1: Generate embedding for the query
@@ -43,7 +53,7 @@ public class RagSearchService : IRagSearchService
         // Step 2: Build base query for embeddings
         var embeddingsQuery = _embeddingRepository.GetQueryable();
 
-        // Step 3: Apply structured filters if provided (join with UserProfile)
+        // Step 3: Apply structured filters if provided (using JOIN for better performance)
         if (request.Filters != null)
         {
             var profileQuery = _userProfileRepository.GetQueryable();
@@ -60,33 +70,30 @@ public class RagSearchService : IRagSearchService
                 profileQuery = profileQuery.Where(p => p.HasStartup == request.Filters.HasStartup.Value);
             }
 
-            // Get filtered profile IDs
-            var filteredProfileIds = await profileQuery
-                .Select(p => p.Id)
-                .ToListAsync(cancellationToken);
-
-            // Apply to embeddings query
-            embeddingsQuery = embeddingsQuery.Where(e => filteredProfileIds.Contains(e.UserProfileId));
+            // JOIN embeddings with filtered profiles
+            embeddingsQuery = embeddingsQuery
+                .Join(
+                    profileQuery,
+                    e => e.UserProfileId,
+                    p => p.Id,
+                    (e, p) => e
+                );
         }
 
-        // Step 4: Search for similar profile IDs using cosine distance (lightweight query)
+        // Step 4: Search for similar profile IDs using cosine distance
+        // Apply similarity filter, sort by distance, and take TopK
         var similarEmbeddings = await embeddingsQuery
-            .OrderBy(e => e.Embedding.CosineDistance(queryVector))
-            .Take(request.TopK)
             .Select(e => new
             {
                 e.UserProfileId,
                 Distance = e.Embedding.CosineDistance(queryVector)
             })
+            .Where(e => (1 - e.Distance) >= request.MinSimilarity)
+            .OrderBy(e => e.Distance)
+            .Take(request.TopK)
             .ToListAsync(cancellationToken);
 
-        // Step 5: Filter by similarity threshold (convert distance to similarity)
-        var filteredEmbeddings = similarEmbeddings
-            .Where(r => (1 - r.Distance) >= request.MinSimilarity)
-            .Take(request.TopK)
-            .ToList();
-
-        if (!filteredEmbeddings.Any())
+        if (!similarEmbeddings.Any())
         {
             _logger.LogInformation("No profiles found matching query with similarity >= {MinSimilarity}", request.MinSimilarity);
             return new RagSearchResponseDto
@@ -100,9 +107,9 @@ public class RagSearchService : IRagSearchService
             };
         }
 
-        // Step 6: Load full profile data for matched IDs (separate optimized query)
-        var matchedProfileIds = filteredEmbeddings.Select(e => e.UserProfileId).ToList();
-        var distanceMap = filteredEmbeddings.ToDictionary(e => e.UserProfileId, e => e.Distance);
+        // Step 5: Load full profile data for matched IDs (separate optimized query)
+        var matchedProfileIds = similarEmbeddings.Select(e => e.UserProfileId).ToList();
+        var distanceMap = similarEmbeddings.ToDictionary(e => e.UserProfileId, e => e.Distance);
 
         var profiles = await _userProfileRepository.GetQueryable()
             .Include(p => p.Skills)
@@ -111,11 +118,15 @@ public class RagSearchService : IRagSearchService
             .ToListAsync(cancellationToken);
 
         _logger.LogInformation("Found {Count} profiles matching query with similarity >= {MinSimilarity}",
-            filteredEmbeddings.Count, request.MinSimilarity);
+            similarEmbeddings.Count, request.MinSimilarity);
 
-        // Step 7: Map to response DTOs (preserving similarity score order)
+        // Step 6: Map to response DTOs (preserving similarity score order)
+        // Use Dictionary for O(1) lookup instead of .First() in loop
+        var profileMap = profiles.ToDictionary(p => p.Id);
+        
         var results = matchedProfileIds
-            .Select(id => profiles.First(p => p.Id == id))
+            .Where(id => profileMap.ContainsKey(id))
+            .Select(id => profileMap[id])
             .Select(p => new ProfileSearchResultDto
             {
                 Id = p.Id,
@@ -143,7 +154,7 @@ public class RagSearchService : IRagSearchService
             TotalResults = results.Count
         };
 
-        // Step 8: Generate natural language response if requested
+        // Step 7: Generate natural language response if requested
         if (request.GenerateResponse)
         {
             response.Answer = await GenerateLlmResponseAsync(request.Query, results, cancellationToken);
@@ -165,12 +176,15 @@ public class RagSearchService : IRagSearchService
     {
         _logger.LogInformation("Generating LLM response for {Count} profiles", profiles.Count);
 
+        // Limit profiles to top 10 to avoid exceeding token limits
+        var topProfiles = profiles.Take(10).ToList();
+
         // Build context from matching profiles
         var contextBuilder = new StringBuilder();
         contextBuilder.AppendLine("Here are the relevant user profiles:");
         contextBuilder.AppendLine();
 
-        foreach (var profile in profiles)
+        foreach (var profile in topProfiles)
         {
             contextBuilder.AppendLine($"--- Profile: {profile.Name} (Similarity: {profile.SimilarityScore:P0}) ---");
             
@@ -218,13 +232,22 @@ Based on the profiles above, answer the user's question. Mention the most releva
 
         try
         {
+            // Create a timeout for LLM call (30 seconds)
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(30));
+
             var response = await _openAIGateway.CreateChatCompletionAsync(
                 messages,
                 model: "gpt-4.1-nano",
                 temperature: 0.2f,
-                cancellationToken: cancellationToken);
+                cancellationToken: timeoutCts.Token);
 
             return response;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning("LLM response generation timed out after 30 seconds");
+            return $"Found {profiles.Count} matching profiles. Check the results list for details. (Response generation timed out)";
         }
         catch (Exception ex)
         {
