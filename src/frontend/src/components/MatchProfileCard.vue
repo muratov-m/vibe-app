@@ -70,8 +70,14 @@
         </div>
         <div class="flex-1">
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">О себе</p>
-          <p class="text-gray-700 leading-relaxed">{{ match.profile.parsedShortBio }}</p>
+          <p class="text-sm text-gray-700 leading-relaxed">{{ match.profile.parsedShortBio }}</p>
         </div>
+      </div>
+
+      <!-- Full Bio (if different from parsed) -->
+      <div v-if="match.profile.bio && match.profile.bio !== match.profile.parsedShortBio" class="border-l-2 border-gray-200 pl-3">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Bio</p>
+        <p class="text-xs text-gray-600 leading-relaxed">{{ match.profile.bio }}</p>
       </div>
 
       <!-- Interests -->
@@ -110,19 +116,67 @@
       <div class="border-t border-gray-200"></div>
 
       <!-- Starter Message CTA -->
-      <div v-if="match.starterMessage" class="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl p-5 text-white">
-        <div class="flex items-start space-x-3">
+      <div v-if="match.starterMessage" class="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-lg p-4">
+        <div class="flex items-start space-x-2">
           <div class="flex-shrink-0 mt-0.5">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
             </svg>
           </div>
           <div class="flex-1">
-            <p class="text-xs font-bold uppercase tracking-wide mb-2 opacity-90">💬 Начните диалог</p>
-            <p class="text-base leading-relaxed font-medium mb-4">{{ match.starterMessage }}</p>
-            <button class="w-full bg-white text-emerald-600 font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-50 transition-colors duration-200 shadow-md hover:shadow-lg">
-              Отправить сообщение →
+            <p class="text-xs font-bold text-emerald-800 uppercase tracking-wide mb-2">💬 Начните диалог</p>
+            <p class="text-sm text-gray-700 leading-relaxed mb-3">{{ match.starterMessage }}</p>
+            
+            <!-- Copy Button -->
+            <button 
+              @click="copyToClipboard(match.starterMessage)"
+              class="mb-3 inline-flex items-center px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              {{ copied ? 'Скопировано!' : 'Скопировать текст' }}
             </button>
+
+            <!-- Contact Links -->
+            <div class="flex flex-wrap gap-2 pt-2 border-t border-emerald-200">
+              <a
+                v-if="match.profile.telegram"
+                :href="`https://t.me/${match.profile.telegram.replace('@', '')}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center px-2.5 py-1 bg-white text-primary-700 text-xs font-medium rounded border border-primary-300 hover:bg-primary-50 transition-colors"
+              >
+                <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 3.767-1.36 5.002-.169.523-.502.697-.825.715-.7.036-1.233-.463-1.912-.908-1.061-.696-1.66-1.129-2.693-1.81-1.193-.785-.42-1.217.261-1.923.179-.185 3.285-3.015 3.346-3.272.008-.032.014-.15-.056-.213-.07-.063-.173-.041-.247-.024-.107.025-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.009-1.252-.242-1.865-.442-.751-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.14.121.099.155.232.171.326.016.095.037.311.021.479z"/>
+                </svg>
+                Telegram
+              </a>
+              
+              <a
+                v-if="match.profile.linkedin"
+                :href="match.profile.linkedin"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center px-2.5 py-1 bg-white text-blue-700 text-xs font-medium rounded border border-blue-300 hover:bg-blue-50 transition-colors"
+              >
+                <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+                LinkedIn
+              </a>
+              
+              <a
+                v-if="match.profile.email"
+                :href="`mailto:${match.profile.email}`"
+                class="inline-flex items-center px-2.5 py-1 bg-white text-gray-700 text-xs font-medium rounded border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Email
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -131,10 +185,26 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
 defineProps({
   match: {
     type: Object,
     required: true
   }
 })
+
+const copied = ref(false)
+
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
 </script>

@@ -4316,3 +4316,60 @@ Maksim Muratov
 
 ---
 
+## Prompt #98
+
+### User Request
+```
+не нравится вид карточек начните диалог, сликом все крупно
+
+Отправить сообщение кнопка не нужна, вместо этого ссылки должны быть на соц сети и email
+
+должна быть кнопка скопировать текст сообщения
+```
+
+### Actions Taken
+- Redesigned "Начните диалог" block in MatchProfileCard.vue for more compact appearance
+- Changed background from gradient color to light bordered design (emerald-50 with border)
+- Reduced padding, font sizes, and icon sizes
+- Removed "Отправить сообщение" button completely
+- Added "Скопировать текст" button with clipboard functionality
+- Added contact links section (Telegram, LinkedIn, Email) below copy button
+- Implemented copy-to-clipboard functionality with feedback ("Скопировано!")
+- Rebuilt frontend successfully
+
+### Technical Decisions
+- Used lighter background (emerald-50) instead of bold gradient for less visual weight
+- Reduced text from `text-base` to `text-sm` for starter message
+- Made contact links compact with small size (`text-xs`, smaller icons)
+- Copy button shows feedback for 2 seconds after successful copy
+- Contact links styled consistently with borders and hover effects
+- All links open in new tab with proper security attributes
+- Used native `navigator.clipboard.writeText()` API for copying
+
+---
+
+## Prompt #99
+
+### User Request
+```
+и добавь вывод Bio
+
+но карточка должна быть легковесная
+```
+
+### Actions Taken
+- Added Bio field to MatchProfileCard.vue
+- Displayed Bio only if it differs from ParsedShortBio (to avoid duplication)
+- Used lightweight design: border-left accent, smaller font (text-xs), muted colors
+- Bio shown as supplementary information below ParsedShortBio
+- Rebuilt frontend successfully
+
+### Technical Decisions
+- Check if `bio !== parsedShortBio` to avoid showing duplicate content
+- Used `text-xs` font size to keep card compact
+- Used gray-400 for label and gray-600 for text (muted colors)
+- Left border (border-l-2) instead of icon to save space
+- Minimal padding (pl-3) for compact appearance
+
+---
+
