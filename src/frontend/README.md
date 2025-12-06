@@ -175,15 +175,20 @@ export default defineConfig({
 })
 ```
 
-### Environment Variables
+### Environment Variables (Optional)
 
-Create `.env.local` to override API URL:
+By default, the frontend uses **relative URLs** (`/api/*`), which works automatically in both development and production:
+
+- **Development**: Vite proxy redirects `/api/*` to `http://localhost:5000`
+- **Production**: Browser uses current domain (e.g., `https://vibe-app.onrender.com/api/*`)
+
+If you need to specify a custom API URL, create `.env.local`:
 
 ```env
-VIBE_API_BASE_URL=http://localhost:5000
+VIBE_API_BASE_URL=https://custom-api-domain.com
 ```
 
-For production, Render will use the same origin.
+**Note:** This is rarely needed - relative URLs work out of the box!
 
 ---
 
@@ -300,12 +305,19 @@ Custom colors in `tailwind.config.js`.
 
 ## 🔧 Customization
 
-### Change API URL
+### Change API URL (Optional)
 
-Edit `src/services/api.js`:
+By default, `src/services/api.js` uses relative URLs:
+
 ```js
-const API_BASE_URL = import.meta.env.VIBE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VIBE_API_BASE_URL || '';
 ```
+
+This works everywhere:
+- **Dev**: `/api/*` → Vite proxy → `localhost:5000`
+- **Production**: `/api/*` → Same origin (e.g., `vibe-app.onrender.com`)
+
+Only override if connecting to external API.
 
 ### Add New Component
 

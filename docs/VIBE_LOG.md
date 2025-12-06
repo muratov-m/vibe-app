@@ -2600,3 +2600,55 @@ MapFallbackToFile()        // 9. Catch-all for SPA
 - `LastProcessedAt` (timestamp nullable)
 
 **Build & Migration Status**: ✅ Все успешно собрано и применено
+
+---
+
+## Prompt #54
+
+### User Request
+```
+frontapp вызывает http://localhost:5000/api/ragsearch/search 
+
+он задеплоен на render
+
+создана переменная environment VIBE_API_BASE_URL
+
+https://vibe-app.onrender.com
+
+ожидаю вызов https://vibe-app.onrender.com/api/ragsearch/search 
+```
+
+### Actions Taken
+1. **Исправлена логика определения API Base URL:**
+   - Изменен `api.js`: теперь использует относительные URL по умолчанию
+   - `VIBE_API_BASE_URL` используется только если явно задана
+   - В production на Render без переменной → относительный путь `/api/...`
+   - В development с Vite proxy → `/api/...` → proxy → `localhost:5000`
+
+2. **Обновлена логика:**
+   ```javascript
+   // Старая логика (неправильно):
+   const API_BASE_URL = import.meta.env.VIBE_API_BASE_URL || 'http://localhost:5000';
+   
+   // Новая логика (правильно):
+   const API_BASE_URL = import.meta.env.VIBE_API_BASE_URL || '';
+   ```
+
+3. **Как это работает:**
+   - **Render (без VIBE_API_BASE_URL)**: `/api/ragsearch/search` → `https://vibe-app.onrender.com/api/ragsearch/search` ✅
+   - **Render (с VIBE_API_BASE_URL)**: `https://vibe-app.onrender.com/api/ragsearch/search` ✅
+   - **Dev с Vite**: `/api/ragsearch/search` → Vite proxy → `http://localhost:5000/api/ragsearch/search` ✅
+
+### Technical Decisions
+
+**Почему пустая строка вместо localhost:**
+- Относительные URL работают и в development (через Vite proxy), и в production
+- На Render не нужно создавать переменную окружения `VIBE_API_BASE_URL` - все работает автоматически
+- Переменную можно использовать только если нужен внешний API URL (например, для мобильного приложения)
+
+**Почему это универсальное решение:**
+- Development: Vite proxy `/api/*` → `localhost:5000`
+- Production: Браузер сам подставляет текущий домен к относительным URL
+- `https://vibe-app.onrender.com` + `/api/...` = `https://vibe-app.onrender.com/api/...`
+
+**Build Status:** ✅ Frontend теперь работает на любом домене без настройки
