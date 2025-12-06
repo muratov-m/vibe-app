@@ -170,9 +170,6 @@ public class UserMatchingEmbeddingService : IUserMatchingEmbeddingService
     {
         try
         {
-            _logger.LogInformation("Finding matching users with mainActivity: {MainActivity}, interests: {Interests}, country: {Country}, city: {City}, topK: {TopK}",
-                mainActivity, interests, country, city, topK);
-
             // Build text from input
             var matchingText = BuildMatchingText(mainActivity, interests, country, city);
             
@@ -181,8 +178,6 @@ public class UserMatchingEmbeddingService : IUserMatchingEmbeddingService
                 _logger.LogWarning("No matching text generated from input");
                 return new List<(UserProfile, float)>();
             }
-
-            _logger.LogInformation("Generated matching text: {MatchingText}", matchingText);
 
             // Generate embedding from input
             var embeddingArray = await _openAIGateway.GetEmbeddingAsync(matchingText, cancellationToken: cancellationToken);

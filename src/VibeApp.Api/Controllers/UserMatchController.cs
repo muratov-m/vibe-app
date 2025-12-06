@@ -12,13 +12,16 @@ namespace VibeApp.Api.Controllers;
 public class UserMatchController : ControllerBase
 {
     private readonly IUserMatchingEmbeddingService _matchingService;
+    private readonly IMatchSummaryService _matchSummaryService;
     private readonly ILogger<UserMatchController> _logger;
 
     public UserMatchController(
         IUserMatchingEmbeddingService matchingService,
+        IMatchSummaryService matchSummaryService,
         ILogger<UserMatchController> logger)
     {
         _matchingService = matchingService;
+        _matchSummaryService = matchSummaryService;
         _logger = logger;
     }
 
@@ -68,9 +71,6 @@ public class UserMatchController : ControllerBase
                 return BadRequest(new { error = "TopK must be between 1 and 20" });
             }
 
-            _logger.LogInformation("User match request: MainActivity={MainActivity}, Interests={Interests}, Country={Country}, City={City}, TopK={TopK}",
-                request.MainActivity, request.Interests, request.Country, request.City, request.TopK);
-
             var matchingUsers = await _matchingService.FindMatchingUsersAsync(
                 request.MainActivity,
                 request.Interests,
@@ -79,10 +79,10 @@ public class UserMatchController : ControllerBase
                 request.TopK,
                 cancellationToken);
 
-            var response = matchingUsers.Select(match => new UserMatchResponseDto
-            {
-                Similarity = match.Similarity,
-                Profile = new UserProfileResponseDto
+            // Convert matched users to UserProfileResponseDto list
+            var profileDtos = matchingUsers
+                .OrderByDescending(x => x.Similarity)
+                .Select(match => new UserProfileResponseDto
                 {
                     Id = match.Profile.Id,
                     Name = match.Profile.Name,
@@ -93,10 +93,30 @@ public class UserMatchController : ControllerBase
                     City = match.Profile.ParsedCity,
                     HasStartup = match.Profile.HasStartup,
                     StartupDescription = match.Profile.StartupDescription
-                }
+                }).ToList();
+
+            // Generate AI summaries and starter messages for all profiles in a single batch request
+            var aiSummaries = await _matchSummaryService.GenerateBatchSummariesAsync(
+                request, 
+                profileDtos, 
+                cancellationToken);
+
+            // Build response with AI-generated content
+            var response = matchingUsers.Select((match, index) =>
+            {
+                var profileDto = profileDtos[index];
+                var hasSummary = aiSummaries.TryGetValue(profileDto.Id, out var summary);
+
+                return new UserMatchResponseDto
+                {
+                    Similarity = match.Similarity,
+                    Profile = profileDto,
+                    AiSummary = hasSummary ? summary.Summary : $"{profileDto.Name} подходит вам по критериям поиска.",
+                    StarterMessage = hasSummary ? summary.StarterMessage : "Привет! Вижу, у нас есть общие интересы. Было бы интересно пообщаться!"
+                };
             }).ToList();
 
-            _logger.LogInformation("Found {Count} matching users", response.Count);
+            _logger.LogInformation("Found {Count} matching users with AI summaries", response.Count);
 
             return Ok(response);
         }

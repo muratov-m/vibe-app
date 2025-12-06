@@ -183,15 +183,11 @@
 
           <!-- Profile Cards Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="match in matchResults" :key="match.profile.id">
-              <!-- Similarity Badge -->
-              <div class="mb-2 flex justify-end">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  {{ Math.round(match.similarity * 100) }}% совпадение
-                </span>
-              </div>
-              <ProfileCard :profile="mapMatchProfile(match)" />
-            </div>
+            <MatchProfileCard
+              v-for="match in matchResults"
+              :key="match.profile.id"
+              :match="match"
+            />
           </div>
         </div>
 
@@ -233,6 +229,7 @@ import { ref } from 'vue'
 import SearchForm from './components/SearchForm.vue'
 import MatchForm from './components/MatchForm.vue'
 import ProfileCard from './components/ProfileCard.vue'
+import MatchProfileCard from './components/MatchProfileCard.vue'
 import { ragSearchService, userMatchService } from './services/api'
 
 // Active tab state
@@ -277,17 +274,6 @@ const handleMatch = async (request) => {
     console.error('Match error:', err)
   } finally {
     matchLoading.value = false
-  }
-}
-
-const mapMatchProfile = (match) => {
-  return {
-    ...match.profile,
-    similarityScore: match.similarity,
-    city: match.profile.city,
-    country: match.profile.country,
-    interests: match.profile.interests,
-    mainActivity: match.profile.mainActivity
   }
 }
 

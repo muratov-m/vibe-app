@@ -14,6 +14,16 @@ public class UserMatchResponseDto
     /// Similarity score (0-1, higher is better match)
     /// </summary>
     public float Similarity { get; set; }
+    
+    /// <summary>
+    /// AI-generated summary explaining why this profile matched
+    /// </summary>
+    public string AiSummary { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// AI-generated starter message suggestion for beginning a conversation
+    /// </summary>
+    public string StarterMessage { get; set; } = string.Empty;
 }
 
 /// <summary>
