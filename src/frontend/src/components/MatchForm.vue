@@ -67,33 +67,22 @@
         </div>
       </div>
 
-      <!-- TopK (Number of Results) -->
-      <div>
-        <label for="topK" class="block text-sm font-medium text-gray-700 mb-2">
-          Количество результатов: {{ formData.topK }}
-        </label>
-        <input
-          id="topK"
-          v-model.number="formData.topK"
-          type="range"
-          min="1"
-          max="10"
-          step="1"
-          class="w-full"
-        />
-        <div class="flex justify-between text-xs text-gray-500 mt-1">
-          <span>1</span>
-          <span>5</span>
-          <span>10</span>
-        </div>
-      </div>
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Random Request Button -->
+        <button
+          type="button"
+          @click="generateRandomRequest"
+          class="bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+        >
+          🎲 Случайный запрос
+        </button>
 
-      <!-- Submit Button -->
-      <div>
+        <!-- Submit Button -->
         <button
           type="submit"
           :disabled="loading || !formData.mainActivity || !formData.interests"
-          class="w-full bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <span v-if="loading">Поиск...</span>
           <span v-else>🤝 Match!</span>
@@ -112,11 +101,260 @@ const formData = ref({
   mainActivity: '',
   interests: '',
   country: '',
-  city: '',
-  topK: 3
+  city: ''
 })
 
 const loading = ref(false)
+
+// Predefined sample profiles for random generation
+const sampleProfiles = [
+  // === Разработчики: Frontend ===
+  {
+    mainActivity: 'Frontend разработчик',
+    interests: 'React, Vue.js, TypeScript, UI/UX, Web Performance',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'Frontend Developer',
+    interests: 'Angular, RxJS, Web Components, Микрофронтенды, Дизайн-системы',
+    country: 'Россия',
+    city: 'Санкт-Петербург'
+  },
+  {
+    mainActivity: 'Frontend разработчик',
+    interests: 'Next.js, React, Tailwind CSS, Анимации, Accessibility',
+    country: 'Грузия',
+    city: 'Тбилиси'
+  },
+
+  // === Разработчики: Backend ===
+  {
+    mainActivity: 'Backend разработчик',
+    interests: 'Node.js, PostgreSQL, Microservices, GraphQL, Docker',
+    country: 'Россия',
+    city: 'Новосибирск'
+  },
+  {
+    mainActivity: 'Backend Developer',
+    interests: 'Python, Django, FastAPI, Redis, Celery, API Design',
+    country: 'Россия',
+    city: 'Казань'
+  },
+  {
+    mainActivity: 'Backend разработчик',
+    interests: 'Go, Kubernetes, High Load, Распределенные системы, gRPC',
+    country: 'Россия',
+    city: 'Екатеринбург'
+  },
+  {
+    mainActivity: 'Backend разработчик',
+    interests: 'C#, .NET Core, Azure, Microservices, Event Sourcing',
+    country: 'Беларусь',
+    city: 'Минск'
+  },
+  {
+    mainActivity: 'Java Backend Developer',
+    interests: 'Spring Boot, Kafka, Elasticsearch, Highload, Архитектура',
+    country: 'Армения',
+    city: 'Ереван'
+  },
+
+  // === Разработчики: Full Stack ===
+  {
+    mainActivity: 'Full Stack разработчик',
+    interests: 'React, Node.js, MongoDB, AWS, DevOps, Стартапы',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'Full Stack Developer',
+    interests: 'Vue.js, Python, PostgreSQL, Docker, CI/CD, Opensource',
+    country: 'Кипр',
+    city: 'Лимассол'
+  },
+  {
+    mainActivity: 'Fullstack разработчик',
+    interests: 'TypeScript, NestJS, React, GraphQL, Тестирование, TDD',
+    country: '',
+    city: ''
+  },
+
+  // === Разработчики: Mobile ===
+  {
+    mainActivity: 'iOS разработчик',
+    interests: 'Swift, SwiftUI, Combine, App Architecture, Mobile UX',
+    country: 'Россия',
+    city: 'Санкт-Петербург'
+  },
+  {
+    mainActivity: 'Android разработчик',
+    interests: 'Kotlin, Jetpack Compose, Clean Architecture, Performance',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'Mobile разработчик',
+    interests: 'Flutter, Dart, Cross-platform, Firebase, Mobile Design',
+    country: 'Казахстан',
+    city: 'Алматы'
+  },
+  {
+    mainActivity: 'React Native разработчик',
+    interests: 'React Native, TypeScript, Redux, Mobile CI/CD, Expo',
+    country: 'Узбекистан',
+    city: 'Ташкент'
+  },
+
+  // === Разработчики: Специализированные ===
+  {
+    mainActivity: 'DevOps Engineer',
+    interests: 'Kubernetes, Terraform, GitLab CI, Monitoring, Prometheus',
+    country: 'Германия',
+    city: 'Берлин'
+  },
+  {
+    mainActivity: 'Blockchain разработчик',
+    interests: 'Solidity, Ethereum, Web3, DeFi, Smart Contracts, NFT',
+    country: '',
+    city: ''
+  },
+  {
+    mainActivity: 'ML Engineer',
+    interests: 'Python, TensorFlow, PyTorch, NLP, Computer Vision, MLOps',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'Game Developer',
+    interests: 'Unity, C#, Game Design, 3D Graphics, Мультиплеер',
+    country: 'Польша',
+    city: 'Варшава'
+  },
+  {
+    mainActivity: 'Data Engineer',
+    interests: 'Apache Spark, Airflow, Data Warehousing, ETL, Big Data',
+    country: 'Нидерланды',
+    city: 'Амстердам'
+  },
+  {
+    mainActivity: 'QA Engineer',
+    interests: 'Автотестирование, Selenium, pytest, CI/CD, Performance testing',
+    country: 'Россия',
+    city: 'Нижний Новгород'
+  },
+
+  // === Инвесторы ===
+  {
+    mainActivity: 'Angel Investor',
+    interests: 'Стартапы на ранней стадии, EdTech, FinTech, Менторство',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'Venture Capitalist',
+    interests: 'Pre-seed инвестиции, SaaS, B2B, Product-market fit, Scaling',
+    country: 'США',
+    city: 'Сан-Франциско'
+  },
+  {
+    mainActivity: 'Бизнес-ангел',
+    interests: 'Технологические стартапы, AI/ML проекты, Нетворкинг, Exit strategy',
+    country: 'ОАЭ',
+    city: 'Дубай'
+  },
+  {
+    mainActivity: 'Private Equity инвестор',
+    interests: 'Growth-stage компании, M&A, Корпоративные финансы, Due diligence',
+    country: 'Великобритания',
+    city: 'Лондон'
+  },
+  {
+    mainActivity: 'Crypto инвестор',
+    interests: 'Web3, DeFi протоколы, Токеномика, Blockchain инфраструктура',
+    country: '',
+    city: ''
+  },
+  {
+    mainActivity: 'Инвестор в недвижимость',
+    interests: 'PropTech, Коммерческая недвижимость, REITs, Девелопмент',
+    country: 'Россия',
+    city: 'Сочи'
+  },
+
+  // === Предприниматели и Менеджеры ===
+  {
+    mainActivity: 'Основатель стартапа',
+    interests: 'Product Management, Growth Hacking, Fundraising, Lean Startup',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'Tech Entrepreneur',
+    interests: 'SaaS, B2B продажи, Product-led growth, Масштабирование команд',
+    country: 'Сингапур',
+    city: 'Сингапур'
+  },
+  {
+    mainActivity: 'Product Manager',
+    interests: 'Product Discovery, User Research, A/B тестирование, Метрики',
+    country: 'Россия',
+    city: 'Санкт-Петербург'
+  },
+  {
+    mainActivity: 'CTO',
+    interests: 'Техническая архитектура, Team Leadership, Tech Stack, R&D',
+    country: 'Эстония',
+    city: 'Таллин'
+  },
+
+  // === Дизайнеры ===
+  {
+    mainActivity: 'Product Designer',
+    interests: 'UI/UX, Figma, Дизайн-системы, Прототипирование, User Testing',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'UX Researcher',
+    interests: 'User Research, Качественные исследования, CJM, Analytics',
+    country: 'Канада',
+    city: 'Торонто'
+  },
+
+  // === Маркетинг и Продажи ===
+  {
+    mainActivity: 'Growth Marketer',
+    interests: 'Performance Marketing, SEO, Контент-маркетинг, Аналитика',
+    country: 'Россия',
+    city: 'Москва'
+  },
+  {
+    mainActivity: 'B2B Sales Manager',
+    interests: 'Enterprise Sales, SaaS продажи, CRM, Переговоры, Networking',
+    country: 'Германия',
+    city: 'Мюнхен'
+  },
+
+  // === Data & AI ===
+  {
+    mainActivity: 'Data Scientist',
+    interests: 'Machine Learning, Python, Статистика, A/B тесты, Прогнозирование',
+    country: 'Швейцария',
+    city: 'Цюрих'
+  },
+  {
+    mainActivity: 'AI Researcher',
+    interests: 'Deep Learning, Transformer модели, NLP, Research Papers, PyTorch',
+    country: '',
+    city: ''
+  }
+]
+
+const generateRandomRequest = () => {
+  const randomProfile = sampleProfiles[Math.floor(Math.random() * sampleProfiles.length)]
+  formData.value = { ...randomProfile }
+}
 
 const handleMatch = async () => {
   loading.value = true
@@ -124,7 +362,7 @@ const handleMatch = async () => {
     const request = {
       mainActivity: formData.value.mainActivity,
       interests: formData.value.interests,
-      topK: formData.value.topK
+      topK: 3 // Always return top 3 most relevant matches
     }
 
     // Only add location if provided
