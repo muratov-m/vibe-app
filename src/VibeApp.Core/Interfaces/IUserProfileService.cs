@@ -20,6 +20,11 @@ public interface IUserProfileService
     Task<UserProfile?> GetUserProfileByIdAsync(int id, CancellationToken cancellationToken = default);
     
     /// <summary>
+    /// Get user profile by email
+    /// </summary>
+    Task<UserProfile?> GetUserProfileByEmailAsync(string email, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Get all user profiles
     /// </summary>
     Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync(CancellationToken cancellationToken = default);

@@ -4218,3 +4218,52 @@ User Match карточки пользователей должны быть п�
 
 ---
 
+## Prompt #95
+
+### User Request
+```
+Давай создадим на фронте новую вкладку 3
+
+- My profile
+
+На форме должно быть поле ввода email 
+
+По нему можно получить информацию о пользователе
+
+Также
+
+Email нужно добавить на UI в карточки профилей в других вкладках
+```
+
+### Actions Taken
+- Creating new "My Profile" tab (3rd tab) on frontend
+- Adding email input field to fetch user profile by email
+- Adding email display to ProfileCard component (RAG Search tab)
+- Adding email display to MatchProfileCard component (User Match tab)
+- Need to add backend API endpoint for profile lookup by email (currently only by ID)
+
+### Technical Decisions
+- Added new backend endpoint: `GET /api/userprofile/by-email/{email}`
+- Created `GetUserProfileByEmailAsync` method in `IUserProfileService` interface and `UserProfileService` implementation
+- Created new Vue component `MyProfile.vue` with email input form
+- Added `userProfileService` to `api.js` with `getByEmail` method
+- Added 3rd tab "👤 My Profile" to App.vue navigation
+- Email now displayed in ProfileCard (under name, before location)
+- Email now displayed in MatchProfileCard (between name and location)
+- Frontend built successfully without errors
+
+### Implementation Details
+**Backend:**
+- `IUserProfileService.GetUserProfileByEmailAsync(string email)` - interface method
+- `UserProfileService.GetUserProfileByEmailAsync(string email)` - implementation with null check and EF query
+- `UserProfileController.GetUserProfileByEmail(string email)` - new endpoint at `/api/userprofile/by-email/{email}`
+
+**Frontend:**
+- `MyProfile.vue` - new component with search form and profile display
+- Email input with validation, loading state, error handling
+- Full profile display with all fields (bio, startup info, skills, contacts, etc.)
+- Added to App.vue as 3rd tab with `handleProfileSearch` handler
+- Email displayed with envelope icon in both ProfileCard and MatchProfileCard
+
+---
+

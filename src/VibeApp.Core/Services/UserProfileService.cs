@@ -208,6 +208,19 @@ public class UserProfileService : IUserProfileService
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
+    public async Task<UserProfile?> GetUserProfileByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return null;
+        }
+        
+        return await _userProfileRepository.GetQueryable()
+            .Include(p => p.Skills)
+            .Include(p => p.LookingFor)
+            .FirstOrDefaultAsync(p => p.Email == email, cancellationToken);
+    }
+
     public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync(CancellationToken cancellationToken = default)
     {
         return await _userProfileRepository.GetQueryable()

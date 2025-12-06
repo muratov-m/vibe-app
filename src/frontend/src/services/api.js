@@ -88,3 +88,24 @@ export const userMatchService = {
   }
 };
 
+export const userProfileService = {
+  /**
+   * Get user profile by email
+   * @param {string} email - Email address
+   * @returns {Promise<Object>} User profile
+   */
+  async getByEmail(email) {
+    const response = await fetch(`${API_BASE_URL}/api/userprofile/by-email/${encodeURIComponent(email)}`);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Профиль с указанным email не найден');
+      }
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch user profile');
+    }
+
+    return await response.json();
+  }
+};
+

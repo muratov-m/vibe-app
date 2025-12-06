@@ -43,6 +43,17 @@
           >
             🤝 User Match
           </button>
+          <button
+            @click="activeTab = 'myprofile'"
+            :class="[
+              'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+              activeTab === 'myprofile'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            ]"
+          >
+            👤 My Profile
+          </button>
         </nav>
       </div>
     </div>
@@ -200,6 +211,11 @@
           </p>
         </div>
       </div>
+
+      <!-- My Profile Tab -->
+      <div v-if="activeTab === 'myprofile'">
+        <MyProfile @search="handleProfileSearch" />
+      </div>
     </main>
 
     <!-- Footer -->
@@ -219,7 +235,8 @@ import SearchForm from './components/SearchForm.vue'
 import MatchForm from './components/MatchForm.vue'
 import ProfileCard from './components/ProfileCard.vue'
 import MatchProfileCard from './components/MatchProfileCard.vue'
-import { ragSearchService, userMatchService } from './services/api'
+import MyProfile from './components/MyProfile.vue'
+import { ragSearchService, userMatchService, userProfileService } from './services/api'
 
 // Active tab state
 const activeTab = ref('rag')
@@ -263,6 +280,18 @@ const handleMatch = async (request) => {
     console.error('Match error:', err)
   } finally {
     matchLoading.value = false
+  }
+}
+
+const handleProfileSearch = async ({ email, loading, error, profile }) => {
+  try {
+    const result = await userProfileService.getByEmail(email)
+    profile.value = result
+  } catch (err) {
+    error.value = err.message || 'Не удалось найти профиль'
+    console.error('Profile search error:', err)
+  } finally {
+    loading.value = false
   }
 }
 

@@ -24,6 +24,14 @@
     <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
       <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ match.profile.name }}</h3>
       
+      <!-- Email -->
+      <div v-if="match.profile.email" class="flex items-center text-gray-600 mb-1">
+        <svg class="w-4 h-4 mr-1.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        </svg>
+        <span class="text-sm font-medium">{{ match.profile.email }}</span>
+      </div>
+      
       <!-- Location -->
       <div v-if="match.profile.city || match.profile.country" class="flex items-center text-gray-600">
         <svg class="w-4 h-4 mr-1.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

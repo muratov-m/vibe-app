@@ -82,7 +82,7 @@
           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <label for="generateResponse" class="ml-3 block text-sm font-medium text-gray-700">
-          🤖 Создать резюме от AI (структурированный список людей)
+          🤖 Создать резюме от AI
         </label>
       </div>
 

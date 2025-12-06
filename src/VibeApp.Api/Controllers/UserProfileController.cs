@@ -82,6 +82,33 @@ public class UserProfileController : ControllerBase
     }
 
     /// <summary>
+    /// Get user profile by email
+    /// </summary>
+    [HttpGet("by-email/{email}")]
+    public async Task<ActionResult> GetUserProfileByEmail(string email, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new { error = "Email is required" });
+            }
+            
+            var userProfile = await _userProfileService.GetUserProfileByEmailAsync(email, cancellationToken);
+            if (userProfile == null)
+            {
+                return NotFound(new { error = "User profile not found" });
+            }
+            return Ok(userProfile);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user profile by email");
+            return StatusCode(500, new { error = "Failed to retrieve user profile" });
+        }
+    }
+
+    /// <summary>
     /// Get all user profiles
     /// </summary>
     [HttpGet]
