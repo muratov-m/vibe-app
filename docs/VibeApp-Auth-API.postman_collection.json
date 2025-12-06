@@ -1,0 +1,471 @@
+{
+  "info": {
+    "name": "VibeApp Auth API",
+    "description": "Collection for testing authentication and authorization endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@vibeapp.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin123",
+      "type": "string"
+    },
+    {
+      "key": "userEmail",
+      "value": "user@vibeapp.com",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "User123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Setup - Initialize Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has userId\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('userId');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/init-admin",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "init-admin"]
+        },
+        "description": "Initialize first admin user (Development only)"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Login as Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"User has Admin role\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.roles).to.include('Admin');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        },
+        "description": "Login with admin credentials"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Current User Info",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has user info\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('email');",
+              "    pm.expect(jsonData).to.have.property('roles');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me"]
+        },
+        "description": "Get current authenticated user info"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Register Regular User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"User registered successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.include('registered');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        },
+        "description": "Register a new regular user"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Admin - Assign Role to User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Role assigned successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.include('assigned');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"role\": \"Admin\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/assign-role",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "assign-role"]
+        },
+        "description": "Assign Admin role to user (requires Admin role)"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Admin - Remove Role from User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Role removed successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.include('removed');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"role\": \"Admin\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/remove-role",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "remove-role"]
+        },
+        "description": "Remove Admin role from user (requires Admin role)"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Admin - Get Embedding Queue Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has queue info\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('profilesInQueue');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/embedding-queue/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "embedding-queue", "status"]
+        },
+        "description": "Get embedding queue status (Admin only)"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Admin - Clear Embedding Queue",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Queue cleared successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.include('cleared');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/embedding-queue/clear",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "embedding-queue", "clear"]
+        },
+        "description": "Clear embedding queue (Admin only)"
+      },
+      "response": []
+    },
+    {
+      "name": "9. Admin - Import User Profiles",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Import completed\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('totalProcessed');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"id\": 1,\n    \"fullName\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"country\": \"USA\",\n    \"bio\": \"Software developer\",\n    \"skills\": [\"C#\", \"JavaScript\"],\n    \"lookingFor\": [\"Remote work\"],\n    \"linkedinUrl\": \"https://linkedin.com/in/johndoe\",\n    \"githubUrl\": \"https://github.com/johndoe\",\n    \"portfolioUrl\": \"https://johndoe.com\"\n  }\n]"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/userprofile/import",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "userprofile", "import"]
+        },
+        "description": "Import user profiles (Admin only)"
+      },
+      "response": []
+    },
+    {
+      "name": "10. Public - Get All User Profiles",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is array\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/userprofile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "userprofile"]
+        },
+        "description": "Get all user profiles (Public access)"
+      },
+      "response": []
+    },
+    {
+      "name": "11. Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Logout successful\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.include('Logout');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/logout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "logout"]
+        },
+        "description": "Logout current user"
+      },
+      "response": []
+    },
+    {
+      "name": "12. Test Unauthorized Access",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {",
+              "    pm.response.to.have.status(401);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/embedding-queue/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "embedding-queue", "status"]
+        },
+        "description": "Try to access admin endpoint without authentication (should return 401)"
+      },
+      "response": []
+    }
+  ]
+}
+

@@ -34,7 +34,7 @@ public class RegisterModel : PageModel
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Пароль обязателен")]
-        [StringLength(100, ErrorMessage = "{0} должен быть минимум {2} и максимум {1} символов.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "{0} должен быть минимум {2} символов.", MinimumLength = 3)]
         [DataType(DataType.Password)]
         [Display(Name = "Пароль")]
         public string Password { get; set; } = string.Empty;

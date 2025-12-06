@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using VibeApp.Core.Extensions;
 using VibeApp.Data;
 using VibeApp.Data.Extensions;
@@ -15,7 +16,35 @@ builder.Services.AddControllers()
     });
 builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "VibeApp API", Version = "v1" });
+    
+    // Add JWT Authentication
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // Add Data layer services (includes DbContext)
 builder.Services.AddDataServices(builder.Configuration);
@@ -23,12 +52,12 @@ builder.Services.AddDataServices(builder.Configuration);
 // Add Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => 
 {
-    // Password settings
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
+    // Password settings - simplified for demo/hackathon
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
     options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 3;
     
     // User settings
     options.User.RequireUniqueEmail = true;

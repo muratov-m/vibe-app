@@ -69,10 +69,15 @@ public class LoginModel : PageModel
             }
             else
             {
+                _logger.LogWarning("Failed login attempt for email: {Email}", Input.Email);
                 ErrorMessage = "Неверный email или пароль.";
                 return Page();
             }
         }
+
+        // Log validation errors for debugging
+        _logger.LogWarning("Login validation failed. Errors: {Errors}", 
+            string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
 
         return Page();
     }
