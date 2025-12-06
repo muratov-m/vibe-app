@@ -3733,6 +3733,30 @@ development ai speech_recognition speech2text whisper agents spiking_neural__net
 
 ---
 
+## Prompt #47
+
+### User Request
+```
+давай в выводить в карточке пользователя информацию из ParsedInterests
+```
+
+### Actions Taken
+1. Проверил что ParsedInterests не возвращается с бэкенда в RagSearchService
+2. Добавил поле Interests в ProfileSearchResultDto
+3. Добавил маппинг p.ParsedInterests в RagSearchService.cs
+4. Добавил секцию "Интересы" в ProfileCard.vue компонент
+
+### Errors & Issues (if any)
+- Нет ошибок. ParsedInterests добавлен успешно.
+
+### Technical Decisions
+- ParsedInterests - это AI-распарсенные интересы пользователя из био (заполняется при генерации эмбеддингов)
+- Добавлен как текстовое поле Interests в DTO (не массив, т.к. AI возвращает связное описание)
+- Выводится после "Может помочь" и "Нужна помощь" в карточке профиля
+- Отображается только если поле не пустое
+
+---
+
 ## Prompt #46
 
 ### User Request

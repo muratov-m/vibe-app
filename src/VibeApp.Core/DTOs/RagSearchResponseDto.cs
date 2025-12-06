@@ -107,6 +107,11 @@ public class ProfileSearchResultDto
     public string? NeedsHelp { get; set; }
 
     /// <summary>
+    /// User's interests (AI-parsed from bio)
+    /// </summary>
+    public string? Interests { get; set; }
+
+    /// <summary>
     /// Cosine similarity score (0-1, higher is more similar)
     /// </summary>
     public float SimilarityScore { get; set; }

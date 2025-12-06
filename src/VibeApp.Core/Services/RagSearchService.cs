@@ -158,6 +158,7 @@ public class RagSearchService : IRagSearchService
                     StartupStage = p.HasStartup ? p.StartupStage : null,
                     CanHelp = p.CanHelp,
                     NeedsHelp = p.NeedsHelp,
+                    Interests = p.ParsedInterests,
                     SimilarityScore = similarityScore
                 };
             }).ToList();
