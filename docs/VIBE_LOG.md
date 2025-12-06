@@ -4267,3 +4267,52 @@ Email нужно добавить на UI в карточки профилей �
 
 ---
 
+## Prompt #96
+
+### User Request
+```
+На базе AI Embeddings
+
+вместо этого нужно вывести мои данные:
+
+Maksim Muratov
+
+@muratov_m_a
+```
+
+### Actions Taken
+- Updated header in App.vue to display author information
+- Replaced "На базе AI Embeddings" text with author name "Maksim Muratov"
+- Changed Telegram handle display to "@muratov_m_a" with clickable link
+- Added link to Telegram profile (https://t.me/muratov_m_a)
+- Rebuilt frontend successfully
+
+### Technical Decisions
+- Made Telegram handle clickable for better UX
+- Added hover effect with underline for link visibility
+- Used primary color scheme for consistency with app design
+
+---
+
+## Prompt #97
+
+### User Request
+```
+на странице поиска RAG в стартап блке добавь "Основатель стартапа", чтобы было понятно
+```
+
+### Actions Taken
+- Updated startup block in ProfileCard.vue (RAG Search tab)
+- Added "🚀 Основатель стартапа" as a clear header/label
+- Startup name now displays separately below the label (if available)
+- Startup stage displays below the name (if available)
+- Rebuilt frontend successfully
+
+### Technical Decisions
+- Made "Основатель стартапа" always visible as a label for clarity
+- Separated startup name and stage into different lines for better readability
+- Added rocket emoji for visual appeal
+- Startup name now has slightly different color (purple-800) to distinguish from label
+
+---
+

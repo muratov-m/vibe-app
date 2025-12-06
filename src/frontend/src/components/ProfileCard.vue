@@ -39,7 +39,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
         </svg>
         <div>
-          <p class="text-sm font-semibold text-purple-900">{{ profile.startupName || 'Основатель стартапа' }}</p>
+          <p class="text-sm font-semibold text-purple-900">🚀 Основатель стартапа</p>
+          <p v-if="profile.startupName" class="text-xs text-purple-800 font-medium">{{ profile.startupName }}</p>
           <p v-if="profile.startupStage" class="text-xs text-purple-700">{{ profile.startupStage }}</p>
         </div>
       </div>

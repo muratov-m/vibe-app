@@ -9,9 +9,15 @@
             <p class="text-sm text-gray-500 mt-1">Умный поиск людей с RAG</p>
           </div>
           <div class="text-right">
-            <p class="text-sm text-gray-600">
-              На базе <span class="font-semibold">AI Embeddings</span>
-            </p>
+            <p class="text-sm font-semibold text-gray-700">Maksim Muratov</p>
+            <a 
+              href="https://t.me/muratov_m_a" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+            >
+              @muratov_m_a
+            </a>
           </div>
         </div>
       </div>
