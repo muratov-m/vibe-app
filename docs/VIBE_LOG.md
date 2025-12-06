@@ -3891,3 +3891,55 @@ MatchingEmbeddingController не нужен, удали
   - CreatedAt/UpdatedAt (timestamp with time zone)
   - Foreign key на UserProfiles с CASCADE DELETE
 - Приложение готово к работе
+
+---
+
+## Prompt #50
+
+### User Request
+```
+На фронте сделай новую форму,чтобы можно было переключаться между вкладками
+
+1. вкладка - текущий RAG search
+
+2. вкладка (новая) - интерфейс для поиска матча пользователей
+
+Пользователь указывает
+- основная деятельность
+- свои интересы строкой через запятую
+- страна
+- город
+
+Далее нажимает кнопку Match!
+
+Прилетает запрос на бэк через UserMatchingEmbeddingService нужно построить embedding по данным с фронта
+Далее нужно подобрать 3 пользователя, которые больше всего матчатся по UserMatchingEmbedding
+
+Вывести карточки с ними, также как на 1 вкладке
+```
+
+### Actions Taken
+1. Добавлен новый метод FindMatchingUsersAsync в IUserMatchingEmbeddingService
+2. Реализован поиск подходящих пользователей по cosine similarity в UserMatchingEmbeddingService
+3. Создан UserMatchRequestDto для передачи данных с фронта
+4. Создан UserMatchController с endpoint /api/usermatch/match
+5. Обновлен api.js - добавлен userMatchService
+6. Создан компонент MatchForm.vue с формой для поиска матча
+7. Обновлен App.vue - добавлена навигация по вкладкам (RAG Search / User Match)
+8. Интерфейс поддерживает переключение между RAG поиском и поиском матчей пользователей
+
+### Technical Decisions
+- Используется тот же BuildMatchingText метод для генерации эмбеддинга из входных данных
+- Поиск выполняется через cosine similarity (1 - cosine distance) в pgvector
+- По умолчанию возвращаются топ-3 пользователя с наибольшим совпадением
+- Форма MatchForm переиспользует ProfileCard компонент для отображения результатов
+- Табы реализованы через простой state в App.vue без роутера
+- API endpoint: POST /api/usermatch/match
+- Входные данные: mainActivity, interests, country, city, topK (опционально)
+
+### User Corrections
+- Удалено дублирование кода в UserMatchingEmbeddingService
+- Создан общий метод BuildMatchingText с перегрузками (один принимает UserProfile, другой - отдельные параметры)
+- Это устраняет дублирование логики построения текста для эмбеддинга
+
+---

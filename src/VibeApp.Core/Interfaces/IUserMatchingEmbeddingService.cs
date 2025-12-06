@@ -22,5 +22,24 @@ public interface IUserMatchingEmbeddingService
     /// Gets matching embedding for a user profile
     /// </summary>
     Task<UserMatchingEmbedding?> GetEmbeddingAsync(int userProfileId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Finds matching users based on provided user criteria (mainActivity, interests, country, city)
+    /// Generates embedding from input and searches for similar users using cosine similarity
+    /// </summary>
+    /// <param name="mainActivity">Main activity/occupation</param>
+    /// <param name="interests">Comma-separated list of interests</param>
+    /// <param name="country">Country</param>
+    /// <param name="city">City</param>
+    /// <param name="topK">Number of results to return (default: 3)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of matching user profiles with similarity scores</returns>
+    Task<List<(UserProfile Profile, float Similarity)>> FindMatchingUsersAsync(
+        string mainActivity, 
+        string interests, 
+        string? country, 
+        string? city, 
+        int topK = 3, 
+        CancellationToken cancellationToken = default);
 }
 

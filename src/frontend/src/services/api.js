@@ -45,3 +45,46 @@ export const ragSearchService = {
   }
 };
 
+export const userMatchService = {
+  /**
+   * Find matching users based on user criteria
+   * @param {Object} request - Match request
+   * @param {string} request.mainActivity - Main activity/occupation
+   * @param {string} request.interests - Comma-separated interests
+   * @param {string} request.country - Country (optional)
+   * @param {string} request.city - City (optional)
+   * @param {number} request.topK - Number of results (default: 3)
+   * @returns {Promise<Array>} List of matching users with similarity scores
+   */
+  async match(request) {
+    const response = await fetch(`${API_BASE_URL}/api/usermatch/match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Match failed');
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Get list of all countries
+   * @returns {Promise<Array>} List of countries with user counts
+   */
+  async getCountries() {
+    const response = await fetch(`${API_BASE_URL}/api/country`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch countries');
+    }
+
+    return await response.json();
+  }
+};
+

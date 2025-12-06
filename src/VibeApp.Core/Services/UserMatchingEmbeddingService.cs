@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pgvector;
+using Pgvector.EntityFrameworkCore;
 using VibeApp.Core.Entities;
 using VibeApp.Core.Interfaces;
 
@@ -129,21 +130,90 @@ public class UserMatchingEmbeddingService : IUserMatchingEmbeddingService
     /// </summary>
     private static string BuildMatchingText(UserProfile profile)
     {
+        return BuildMatchingText(
+            profile.ParsedMainActivity,
+            profile.ParsedInterests,
+            profile.ParsedCountry,
+            profile.ParsedCity
+        );
+    }
+    
+    /// <summary>
+    /// Builds matching text from provided fields
+    /// </summary>
+    private static string BuildMatchingText(string? mainActivity, string? interests, string? country, string? city)
+    {
         var sb = new StringBuilder();
 
-        if (!string.IsNullOrWhiteSpace(profile.ParsedInterests))
-            sb.AppendLine($"Interests: {profile.ParsedInterests}");
+        if (!string.IsNullOrWhiteSpace(mainActivity))
+            sb.AppendLine($"Main activity: {mainActivity}");
+
+        if (!string.IsNullOrWhiteSpace(interests))
+            sb.AppendLine($"Interests: {interests}");
+
+        if (!string.IsNullOrWhiteSpace(country))
+            sb.AppendLine($"Country: {country}");
         
-        if (!string.IsNullOrWhiteSpace(profile.ParsedMainActivity))
-            sb.AppendLine($"Main activity: {profile.ParsedMainActivity}");
-        
-        if (!string.IsNullOrWhiteSpace(profile.ParsedCountry))
-            sb.AppendLine($"Country: {profile.ParsedCountry}");
-        
-        if (!string.IsNullOrWhiteSpace(profile.ParsedCity))
-            sb.AppendLine($"City: {profile.ParsedCity}");
+        if (!string.IsNullOrWhiteSpace(city))
+            sb.AppendLine($"City: {city}");
 
         return sb.ToString().Trim();
+    }
+    
+    public async Task<List<(UserProfile Profile, float Similarity)>> FindMatchingUsersAsync(
+        string mainActivity, 
+        string interests, 
+        string? country, 
+        string? city, 
+        int topK = 3, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Finding matching users with mainActivity: {MainActivity}, interests: {Interests}, country: {Country}, city: {City}, topK: {TopK}",
+                mainActivity, interests, country, city, topK);
+
+            // Build text from input
+            var matchingText = BuildMatchingText(mainActivity, interests, country, city);
+            
+            if (string.IsNullOrWhiteSpace(matchingText))
+            {
+                _logger.LogWarning("No matching text generated from input");
+                return new List<(UserProfile, float)>();
+            }
+
+            _logger.LogInformation("Generated matching text: {MatchingText}", matchingText);
+
+            // Generate embedding from input
+            var embeddingArray = await _openAIGateway.GetEmbeddingAsync(matchingText, cancellationToken: cancellationToken);
+            var searchVector = new Vector(embeddingArray);
+
+            // Search for similar users using cosine similarity
+            // Formula: similarity = 1 - cosine_distance
+            var matchingUsers = await _embeddingRepository.GetQueryable()
+                .Include(e => e.UserProfile)
+                .Select(e => new
+                {
+                    e.UserProfile,
+                    Similarity = 1 - e.Embedding.CosineDistance(searchVector)
+                })
+                .OrderByDescending(x => x.Similarity)
+                .Take(topK)
+                .ToListAsync(cancellationToken);
+
+            var results = matchingUsers
+                .Select(x => (x.UserProfile!, (float)x.Similarity))
+                .ToList();
+
+            _logger.LogInformation("Found {Count} matching users", results.Count);
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding matching users");
+            throw;
+        }
     }
 }
 
