@@ -1,14 +1,10 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6">
-    <!-- Creative Header -->
+    <!-- Header -->
     <div class="text-center mb-6">
-      <div class="flex items-center justify-center gap-3">
-        <span class="text-3xl">☕</span>
-        <h2 class="text-3xl font-bold bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 bg-clip-text text-transparent">
-          The "Coffee Break" Roulette
+      <h2 class="text-3xl font-bold text-gray-900">
+        The 'Coffee Break' Roulette
         </h2>
-        <span class="text-3xl">☕</span>
-      </div>
     </div>
     
     <!-- Email Section at Top -->

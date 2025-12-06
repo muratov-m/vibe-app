@@ -4,7 +4,7 @@
     <div class="bg-gradient-to-r from-primary-50 to-primary-100 p-4 relative">
       <div class="absolute top-4 right-4">
         <span class="bg-primary-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-          {{ (profile.similarityScore * 100).toFixed(0) }}% совпадение
+          {{ (profile.similarityScore * 100).toFixed(0) }}%
         </span>
       </div>
       

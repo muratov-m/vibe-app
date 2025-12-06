@@ -81,11 +81,11 @@
       <div class="border-t border-gray-200"></div>
 
       <!-- Starter Message CTA - Compact -->
-      <div v-if="match.starterMessage" class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-        <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-2">💬 Начните диалог</p>
+      <div v-if="match.starterMessage" class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p class="text-xs font-semibold text-blue-900 uppercase tracking-wide mb-2">💬 Начните диалог</p>
         <p class="text-sm text-gray-700 leading-relaxed mb-2">{{ match.starterMessage }}</p>
         
-        <div class="flex items-center justify-between pt-2 border-t border-emerald-200">
+        <div class="flex items-center justify-between pt-2 border-t border-blue-200">
           <!-- Contact Links -->
           <div class="flex flex-wrap gap-1.5">
             <a
@@ -130,7 +130,7 @@
           <button 
             @click="copyToClipboard(match.starterMessage)"
             :title="copied ? 'Скопировано!' : 'Скопировать текст'"
-            class="flex-shrink-0 p-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors"
+            class="flex-shrink-0 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
