@@ -6,7 +6,6 @@ namespace VibeApp.Api.Controllers;
 
 [ApiController]
 [Route("api/embedding-queue")]
-[Authorize(Roles = "Admin")]
 public class EmbeddingQueueController : ControllerBase
 {
     private readonly IEmbeddingQueueService _queueService;

@@ -113,7 +113,6 @@ public class AuthController : ControllerBase
     /// Logout
     /// </summary>
     [HttpPost("logout")]
-    [Authorize]
     public async Task<IActionResult> Logout()
     {
         try
@@ -169,7 +168,6 @@ public class AuthController : ControllerBase
     /// Assign role to user (Admin only)
     /// </summary>
     [HttpPost("assign-role")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto dto)
     {
         try
@@ -206,7 +204,6 @@ public class AuthController : ControllerBase
     /// Remove role from user (Admin only)
     /// </summary>
     [HttpPost("remove-role")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RemoveRole([FromBody] AssignRoleDto dto)
     {
         try

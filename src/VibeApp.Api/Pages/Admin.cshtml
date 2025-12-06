@@ -13,10 +13,19 @@
                 <div class="card-body text-dark">
                     <h5 class="card-title">Пользователи</h5>
                     <p class="card-text mb-1">
-                        <span class="text-muted">Общее количество пользователей:</span>
+                        <span class="text-muted">Общее количество пользователей (Identity):</span>
                     </p>
                     <p class="display-6 mb-0">
                         @Model.TotalUsers
+                    </p>
+
+                    <hr class="my-3" />
+
+                    <p class="card-text mb-1">
+                        <span class="text-muted">Профилей в базе (`UserProfile`):</span>
+                    </p>
+                    <p class="h3 mb-0">
+                        @Model.TotalUserProfiles
                     </p>
                 </div>
             </div>

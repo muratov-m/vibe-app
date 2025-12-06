@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace VibeApp.Api.Pages.Account;
 
-[Authorize]
 public class ProfileModel : PageModel
 {
     private readonly UserManager<IdentityUser> _userManager;

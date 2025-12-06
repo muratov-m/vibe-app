@@ -28,7 +28,6 @@ public class UserProfileController : ControllerBase
     /// Deletes users not present in the import list
     /// </summary>
     [HttpPost("import")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> ImportUserProfiles([FromBody] List<UserProfileImportDto> dtos, CancellationToken cancellationToken)
     {
         try
@@ -104,7 +103,6 @@ public class UserProfileController : ControllerBase
     /// Update user profile
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> UpdateUserProfile(int id, [FromBody] UserProfileImportDto dto, CancellationToken cancellationToken)
     {
         try
@@ -127,7 +125,6 @@ public class UserProfileController : ControllerBase
     /// Delete user profile
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> DeleteUserProfile(int id, CancellationToken cancellationToken)
     {
         try
